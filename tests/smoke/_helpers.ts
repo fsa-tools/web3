@@ -9,6 +9,10 @@ export type SmokeChainConfig = {
     weth?: `0x${string}`;
     usdc?: `0x${string}`;
   };
+  aaveReserves?: {
+    weth?: `0x${string}`;
+    usdc?: `0x${string}`;
+  };
   protocols: {
     uniswapV3Npm?: `0x${string}`;
     uniswapV3Factory?: `0x${string}`;
