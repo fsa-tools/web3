@@ -38,26 +38,26 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
       const supplyResult = await aave.supply({
         publicClient,
         walletClient: walletClient!,
-        pool,
+        chainId: cfg.chainId,
         asset,
         amount,
-      } as any);
+      });
       expect(supplyResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
       const acct = await aave.getUserAccountData({
         publicClient,
-        pool,
+        chainId: cfg.chainId,
         user: owner,
-      } as any);
+      });
       expect(acct.totalCollateralBase).toBeGreaterThan(0n);
 
       const withdrawResult = await aave.withdraw({
         publicClient,
         walletClient: walletClient!,
-        pool,
+        chainId: cfg.chainId,
         asset,
         amount,
-      } as any);
+      });
       expect(withdrawResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
     }, 120_000);
   });

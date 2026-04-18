@@ -6,7 +6,6 @@ export type SmokeChainConfig = {
   rpcEnvVar: string;
   pkEnvVar: string;
   faucetTokens: {
-    // Endereços de tokens de faucet conhecidos por testnet
     weth?: `0x${string}`;
     usdc?: `0x${string}`;
   };
@@ -19,34 +18,18 @@ export type SmokeChainConfig = {
 };
 
 export const SMOKE_CHAINS: Record<string, SmokeChainConfig> = {
-  arbitrumSepolia: {
-    chainId: 421614,
-    name: "arbitrum-sepolia",
-    rpcEnvVar: "ARBITRUM_SEPOLIA_RPC",
-    pkEnvVar: "SMOKE_PK_ARBITRUM",
+  sepolia: {
+    chainId: 11155111,
+    name: "sepolia",
+    rpcEnvVar: "SEPOLIA_RPC",
+    pkEnvVar: "SMOKE_PK_SEPOLIA",
     faucetTokens: {
-      // WETH Sepolia Arbitrum
-      weth: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73",
-      // USDC faucet Arbitrum Sepolia
-      usdc: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+      weth: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+      usdc: "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
     },
     protocols: {
-      uniswapV3Npm: "0x6b2937Bde17889EDCf8fbD8dE31C3C2a70Bc4d65",
-      aavePool: "0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff",
-    },
-  },
-  baseSepolia: {
-    chainId: 84532,
-    name: "base-sepolia",
-    rpcEnvVar: "BASE_SEPOLIA_RPC",
-    pkEnvVar: "SMOKE_PK_BASE",
-    faucetTokens: {
-      weth: "0x4200000000000000000000000000000000000006",
-      usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    },
-    protocols: {
-      uniswapV3Npm: "0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2",
-      aerodromeNpm: "0x827922686190790b37229fd06084350E74485b72",
+      uniswapV3Npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
+      aavePool: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
     },
   },
   polygonAmoy: {
@@ -56,7 +39,7 @@ export const SMOKE_CHAINS: Record<string, SmokeChainConfig> = {
     pkEnvVar: "SMOKE_PK_POLYGON",
     faucetTokens: {
       weth: "0x52eF3d68BaB452a294342DC3e5f464d7f610f72E",
-      usdc: "0x41e94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+      usdc: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
     },
     protocols: {
       uniswapV3Npm: "0x1238536071E1c677A632429e3655c799b22cDA52",

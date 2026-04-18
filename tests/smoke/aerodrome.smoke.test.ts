@@ -5,8 +5,9 @@ import * as aerodrome from "../../src/protocols/aerodrome/index.js";
 import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
 
 const cfg = SMOKE_CHAINS.baseSepolia;
-const env = loadChainEnv(cfg);
+const env = cfg ? loadChainEnv(cfg) : null;
 const canRun =
+  cfg &&
   env &&
   cfg.protocols.aerodromeNpm &&
   cfg.faucetTokens.weth &&

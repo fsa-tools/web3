@@ -19,6 +19,8 @@ import {
   polygon,
   sepolia,
   polygonAmoy,
+  arbitrumSepolia,
+  baseSepolia,
 } from "viem/chains";
 
 export type CreateClientsParams = {
@@ -40,6 +42,8 @@ const CHAIN_MAP: Record<number, Chain> = {
   137: polygon,
   11155111: sepolia,
   80002: polygonAmoy,
+  421614: arbitrumSepolia,
+  84532: baseSepolia,
 };
 
 export function createClients(params: CreateClientsParams): ClientPair {

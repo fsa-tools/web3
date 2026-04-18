@@ -73,4 +73,26 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
       pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
     },
   },
+  11155111: {
+    weth: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    wethUsdcPool: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    uniswapV3: {
+      npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
+      factory: "0x0227628f3F023bb0B980b67D528571c95c6DaC1c",
+    },
+    aave: {
+      pool: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
+    },
+  },
+  80002: {
+    weth: "0x52eF3d68BaB452a294342DC3e5f464d7f610f72E",
+    wethUsdcPool: "0x52eF3d68BaB452a294342DC3e5f464d7f610f72E",
+    uniswapV3: {
+      npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
+      factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    },
+    aave: {
+      pool: "0x1758d4e6f68166C4B2d9d0F049F33dEB399Daa1F",
+    },
+  },
 };
