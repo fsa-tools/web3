@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { createClients } from "../../src/utils/client.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
-import * as uniswapV3 from "../../src/protocols/uniswap-v3/index.js";
+import {
+  mintPosition,
+  decreaseLiquidity,
+  collectFees,
+  burnPosition,
+} from "../../src/protocols/uniswap-v3/index.js";
 import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
 
 for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
@@ -16,7 +21,6 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
     if (!canRun) return;
     const weth = cfg.faucetTokens.weth!;
     const usdc = cfg.faucetTokens.usdc!;
-    const npm = cfg.protocols.uniswapV3Npm!;
 
     it(`full lifecycle: mint → decrease 50% → collect → burn`, async () => {
       const { publicClient, walletClient } = createClients({
@@ -24,9 +28,9 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         rpcUrl: env!.rpcUrl,
         privateKey: env!.pk,
       });
-
-      // 1. Balance sanity
       const owner = walletClient!.account.address;
+      const npm = cfg.protocols.uniswapV3Npm!;
+
       const [wethDec, usdcDec] = await Promise.all([
         getTokenDecimals({ publicClient, token: weth }),
         getTokenDecimals({ publicClient, token: usdc }),
@@ -35,8 +39,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         getBalance({ publicClient, token: weth, owner }),
         getBalance({ publicClient, token: usdc, owner }),
       ]);
-      const wethMin = 10n ** BigInt(wethDec - 3); // 0.001 WETH
-      const usdcMin = 10n ** BigInt(usdcDec); // 1 USDC
+      const wethMin = 10n ** BigInt(wethDec - 3);
+      const usdcMin = 10n ** BigInt(usdcDec);
       if (wethBal < wethMin || usdcBal < usdcMin) {
         console.warn(
           `Skipping ${cfg.name} — insufficient balance (weth=${wethBal}, usdc=${usdcBal})`,
@@ -44,7 +48,6 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         return;
       }
 
-      // 2. Approvals
       await ensureAllowance({
         publicClient,
         walletClient: walletClient!,
@@ -60,60 +63,74 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         amount: usdcMin,
       });
 
-      // 3. Mint — parâmetros exatos dependem da assinatura em src/protocols/uniswap-v3/mint.ts
-      const mintResult = await uniswapV3.mint({
+      const token0 = weth < usdc ? weth : usdc;
+      const token1 = weth < usdc ? usdc : weth;
+      const amount0Desired = weth < usdc ? wethMin : usdcMin;
+      const amount1Desired = weth < usdc ? usdcMin : wethMin;
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
+
+      const mintResult = await mintPosition({
         publicClient,
         walletClient: walletClient!,
-        token0: weth < usdc ? weth : usdc,
-        token1: weth < usdc ? usdc : weth,
+        chainId: cfg.chainId,
+        token0,
+        token1,
         fee: 500,
         tickLower: -60_000,
         tickUpper: 60_000,
-        amount0Desired: weth < usdc ? wethMin : usdcMin,
-        amount1Desired: weth < usdc ? usdcMin : wethMin,
+        amount0Desired,
+        amount1Desired,
         slippageBps: 500,
-        deadlineSecs: 600,
-      } as any);
+        deadline,
+      });
       expect(mintResult.tokenId).toBeGreaterThan(0n);
 
-      // 4. Decrease 50%
-      const decResult = await uniswapV3.decrease({
+      const halfLiquidity = mintResult.liquidity / 2n;
+      const remainingLiquidity = mintResult.liquidity - halfLiquidity;
+
+      const decResult = await decreaseLiquidity({
         publicClient,
         walletClient: walletClient!,
+        chainId: cfg.chainId,
         tokenId: mintResult.tokenId,
-        liquidityBps: 5000,
+        liquidity: halfLiquidity,
         slippageBps: 500,
-        deadlineSecs: 600,
-      } as any);
+        deadline,
+        recipient: owner,
+      });
       expect(decResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
-      // 5. Collect
-      const collectResult = await uniswapV3.collect({
+      await collectFees({
         publicClient,
         walletClient: walletClient!,
+        chainId: cfg.chainId,
         tokenId: mintResult.tokenId,
-      } as any);
-      expect(collectResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
+        recipient: owner,
+      });
 
-      // 6. Decrease 100% + burn
-      await uniswapV3.decrease({
+      await decreaseLiquidity({
         publicClient,
         walletClient: walletClient!,
+        chainId: cfg.chainId,
         tokenId: mintResult.tokenId,
-        liquidityBps: 10_000,
+        liquidity: remainingLiquidity,
         slippageBps: 500,
-        deadlineSecs: 600,
-      } as any);
-      await uniswapV3.collect({
+        deadline,
+        recipient: owner,
+      });
+      await collectFees({
         publicClient,
         walletClient: walletClient!,
+        chainId: cfg.chainId,
         tokenId: mintResult.tokenId,
-      } as any);
-      const burnResult = await uniswapV3.burn({
+        recipient: owner,
+      });
+      const burnResult = await burnPosition({
         publicClient,
         walletClient: walletClient!,
+        chainId: cfg.chainId,
         tokenId: mintResult.tokenId,
-      } as any);
+      });
       expect(burnResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
     }, 180_000);
   });
