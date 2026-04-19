@@ -1,7 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { createClients } from "../../src/utils/client.js";
 import { ensureAllowance } from "../../src/utils/erc20.js";
-import * as aerodrome from "../../src/protocols/aerodrome/index.js";
+import {
+  mintPosition,
+  decreaseLiquidity,
+  collectFees,
+  burnPosition,
+} from "../../src/protocols/aerodrome/index.js";
+import { AERODROME_NPM_ABI } from "../../src/abis/aerodrome-npm.js";
+import { POOL_SLOT0_ABI } from "../../src/abis/pool.js";
 import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
 
 const cfg = SMOKE_CHAINS.baseSepolia;
@@ -10,6 +17,7 @@ const canRun =
   cfg &&
   env &&
   cfg.protocols.aerodromeNpm &&
+  cfg.protocols.aerodromeWethUsdcPool &&
   cfg.faucetTokens.weth &&
   cfg.faucetTokens.usdc;
 
@@ -18,6 +26,7 @@ describe.skipIf(!canRun)("aerodrome smoke lifecycle — base-sepolia", () => {
   const weth = cfg.faucetTokens.weth!;
   const usdc = cfg.faucetTokens.usdc!;
   const npm = cfg.protocols.aerodromeNpm!;
+  const poolAddress = cfg.protocols.aerodromeWethUsdcPool!;
 
   it("mint → decrease 50% → collect → burn", async () => {
     const { publicClient, walletClient } = createClients({
@@ -25,7 +34,18 @@ describe.skipIf(!canRun)("aerodrome smoke lifecycle — base-sepolia", () => {
       rpcUrl: env!.rpcUrl,
       privateKey: env!.pk,
     });
-    // Params reais idênticos em estrutura à Task 16; `as any` até sabermos a assinatura exata.
+
+    const slot0 = await publicClient.readContract({
+      address: poolAddress,
+      abi: POOL_SLOT0_ABI,
+      functionName: "slot0",
+    });
+    const sqrtPriceX96 = slot0.sqrtPriceX96;
+
+    const token0 = weth < usdc ? weth : usdc;
+    const token1 = weth < usdc ? usdc : weth;
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
+
     await ensureAllowance({
       publicClient,
       walletClient: walletClient!,
@@ -41,52 +61,76 @@ describe.skipIf(!canRun)("aerodrome smoke lifecycle — base-sepolia", () => {
       amount: 10n ** 6n,
     });
 
-    const mint = await aerodrome.mint({
+    const mint = await mintPosition({
       publicClient,
       walletClient: walletClient!,
-      token0: weth < usdc ? weth : usdc,
-      token1: weth < usdc ? usdc : weth,
+      npmAddress: npm,
+      poolAddress,
+      token0,
+      token1,
       tickSpacing: 200,
       tickLower: -60_000,
       tickUpper: 60_000,
       amount0Desired: weth < usdc ? 10n ** 15n : 10n ** 6n,
       amount1Desired: weth < usdc ? 10n ** 6n : 10n ** 15n,
+      sqrtPriceX96,
       slippageBps: 500,
-      deadlineSecs: 600,
-    } as any);
-    expect(mint.tokenId).toBeGreaterThan(0n);
+      deadline,
+    });
+    expect(mint.nftId).toBeGreaterThan(0n);
 
-    await aerodrome.decrease({
+    const posData = await publicClient.readContract({
+      address: npm,
+      abi: AERODROME_NPM_ABI,
+      functionName: "positions",
+      args: [mint.nftId],
+    });
+    const fullLiquidity = posData.liquidity;
+    const halfLiquidity = fullLiquidity / 2n;
+    const remainingLiquidity = fullLiquidity - halfLiquidity;
+
+    const decrease1 = await decreaseLiquidity({
       publicClient,
       walletClient: walletClient!,
-      tokenId: mint.tokenId,
-      liquidityBps: 5000,
-      slippageBps: 500,
-      deadlineSecs: 600,
-    } as any);
-    await aerodrome.collect({
+      npmAddress: npm,
+      nftId: mint.nftId,
+      liquidity: halfLiquidity,
+      deadline,
+    });
+    expect(decrease1.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
+
+    const collect1 = await collectFees({
       publicClient,
       walletClient: walletClient!,
-      tokenId: mint.tokenId,
-    } as any);
-    await aerodrome.decrease({
+      npmAddress: npm,
+      nftId: mint.nftId,
+    });
+    expect(collect1.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
+
+    const decrease2 = await decreaseLiquidity({
       publicClient,
       walletClient: walletClient!,
-      tokenId: mint.tokenId,
-      liquidityBps: 10_000,
-      slippageBps: 500,
-      deadlineSecs: 600,
-    } as any);
-    await aerodrome.collect({
+      npmAddress: npm,
+      nftId: mint.nftId,
+      liquidity: remainingLiquidity,
+      deadline,
+    });
+    expect(decrease2.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
+
+    const collect2 = await collectFees({
       publicClient,
       walletClient: walletClient!,
-      tokenId: mint.tokenId,
-    } as any);
-    const burn = await aerodrome.burn({
+      npmAddress: npm,
+      nftId: mint.nftId,
+    });
+    expect(collect2.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
+
+    const burn = await burnPosition({
       publicClient,
       walletClient: walletClient!,
-      tokenId: mint.tokenId,
-    } as any);
+      npmAddress: npm,
+      nftId: mint.nftId,
+    });
     expect(burn.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
   }, 180_000);
 });
