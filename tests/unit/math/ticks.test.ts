@@ -11,6 +11,8 @@ import {
   formatSqrtPrice,
   MIN_TICK,
   MAX_TICK,
+  MIN_SQRT_RATIO,
+  MAX_SQRT_RATIO,
 } from "../../../src/math/ticks.js";
 
 describe("ticks", () => {
@@ -27,13 +29,21 @@ describe("ticks", () => {
     });
 
     it("getSqrtRatioAtTick at MIN_TICK is smallest valid value", () => {
-      expect(getSqrtRatioAtTick(MIN_TICK)).toBe(4295128738n);
+      expect(getSqrtRatioAtTick(MIN_TICK)).toBe(4295128739n);
     });
 
     it("getSqrtRatioAtTick at MAX_TICK is largest valid value", () => {
       expect(getSqrtRatioAtTick(MAX_TICK)).toBe(
-        1461446703478070281035530027706464741740609798144n,
+        1461446703485210103287273052203988822378723970342n,
       );
+    });
+
+    it("MIN_SQRT_RATIO constant matches tick result", () => {
+      expect(getSqrtRatioAtTick(MIN_TICK)).toBe(MIN_SQRT_RATIO);
+    });
+
+    it("MAX_SQRT_RATIO constant matches tick result", () => {
+      expect(getSqrtRatioAtTick(MAX_TICK)).toBe(MAX_SQRT_RATIO);
     });
 
     it("result is always positive bigint", () => {

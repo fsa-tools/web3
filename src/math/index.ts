@@ -11,6 +11,8 @@ export {
   inversePriceToTick,
   MIN_TICK,
   MAX_TICK,
+  MIN_SQRT_RATIO,
+  MAX_SQRT_RATIO,
 } from "./ticks.js";
 export { getLockedAmounts } from "./liquidity.js";
 export type { GetLockedAmountsParams } from "./liquidity.js";
