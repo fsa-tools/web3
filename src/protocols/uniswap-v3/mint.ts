@@ -26,8 +26,8 @@ export async function mintPosition(
     gasOptions,
   } = params;
 
-  if (slippageBps < 0 || slippageBps > 10_000) {
-    throw new Error(`slippageBps ${slippageBps} must be between 0 and 10000`);
+  if (slippageBps < 0 || slippageBps > 5_000) {
+    throw new Error("slippageBps exceeds maximum (5000 = 50%)");
   }
 
   const chainAddrs = ADDRESSES[chainId];

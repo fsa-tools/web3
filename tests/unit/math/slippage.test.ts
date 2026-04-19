@@ -23,4 +23,12 @@ describe("slippage", () => {
     expect(() => applySlippage(1n, -1)).toThrow(/between 0 and 10000/);
     expect(() => applySlippage(1n, 10_001)).toThrow(/between 0 and 10000/);
   });
+
+  it("applySlippage allows exactly 5000 bps (50%)", () => {
+    expect(applySlippage(10_000n, 5_000)).toBe(5_000n);
+  });
+
+  it("applySlippage allows above 5000 up to 10000 (math utility has no 5000 cap)", () => {
+    expect(applySlippage(10_000n, 6_000)).toBe(4_000n);
+  });
 });
