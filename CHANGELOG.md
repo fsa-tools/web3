@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.0] — 2026-04-19
+
+### Added
+- `src/utils/retry.ts`: `withRetry<T>` com exponential backoff + full jitter (base 1s, max 30s, 3 tentativas) — R-03
+- `MIN_SQRT_RATIO` e `MAX_SQRT_RATIO` exportados de `src/math/ticks.ts`
+
+### Changed
+- `getSqrtRatioAtTick` reescrito em bigint (port de `TickMath.sol` do Uniswap v3-core) — elimina divergência float em ticks extremos. `MIN_TICK` agora retorna `4295128739n` (canônico), `MAX_TICK` retorna `1461446703485210103287273052203988822378723970342n` — T1
+- `slippageBps > 5000` lança erro em `uniswap-v3/mint`, `aerodrome/mint` e `uniswap-v3/decrease` (reduzido de 10000 para 50% máximo) — T-04
+- `publicClient.simulateContract` em `uniswap-v3/decrease` envolto com `withRetry` para tolerância a falhas RPC transientes
+- `wethUsdcPool` em `ChainAddresses` agora opcional (`Address | undefined`) — Sepolia e Amoy não têm pool WETH/USDC válido
+- Sepolia `wethUsdcPool` resolvido via Uniswap V3 Factory: `0x4d8cad269d06fd610334ccda8384857c2d9327d1` (fee 500)
+- Smoke Uniswap V3: gate adicionado em `chainAddrs?.wethUsdcPool` + wrap ETH→WETH automático quando saldo insuficiente
+- Smoke Aerodrome: tipagem correta (`mintPosition`, `decreaseLiquidity`, `collectFees`, `burnPosition`; `nftId`; `slot0` + `positions()` para liquidity)
+- Aerodrome Finance não tem deployment em Base Sepolia (verificado 2026-04-19 via `eth_getCode`) — smoke skipa por design
+
 ## [Unreleased]
 
 ### Changed
