@@ -37,3 +37,4 @@ export {
 } from "./erc20.js";
 export { validateAddress } from "./address.js";
 export { getTokenDecimals, type GetTokenDecimalsParams } from "./decimals.js";
+export { withRetry, type RetryOptions } from "./retry.js";
