@@ -75,6 +75,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
   },
   11155111: {
     weth: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    wethUsdcPool: "0x4d8cad269d06fd610334ccda8384857c2d9327d1",
     uniswapV3: {
       npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
       factory: "0x0227628f3F023bb0B980b67D528571c95c6DaC1c",
