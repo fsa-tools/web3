@@ -7,11 +7,11 @@ import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
 
 for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
   const env = loadChainEnv(cfg);
-  const canRun = env && cfg.protocols.aavePool && cfg.faucetTokens.usdc;
+  const canRun = env && cfg.protocols.aavePool && cfg.aaveReserves?.usdc;
   describe.skipIf(!canRun)(`aave smoke — ${cfg.name}`, () => {
     if (!canRun) return;
     const pool = cfg.protocols.aavePool!;
-    const asset = cfg.faucetTokens.usdc!;
+    const asset = cfg.aaveReserves!.usdc!;
 
     it("supply 1 USDC → getUserAccountData → withdraw", async () => {
       const { publicClient, walletClient } = createClients({
@@ -24,7 +24,10 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
       const amount = 10n ** BigInt(decimals); // 1 USDC
       const bal = await getBalance({ publicClient, token: asset, owner });
       if (bal < amount) {
-        console.warn(`Skipping aave ${cfg.name} — insufficient USDC`);
+        console.warn(
+          `Skipping aave ${cfg.name} — insufficient USDC on Aave reserve ${asset}. ` +
+            `Aave V3 testnet reserves expose a public mint() — fund the wallet via block explorer before re-running.`,
+        );
         return;
       }
 

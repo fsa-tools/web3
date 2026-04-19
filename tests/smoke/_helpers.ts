@@ -9,6 +9,10 @@ export type SmokeChainConfig = {
     weth?: `0x${string}`;
     usdc?: `0x${string}`;
   };
+  aaveReserves?: {
+    weth?: `0x${string}`;
+    usdc?: `0x${string}`;
+  };
   protocols: {
     uniswapV3Npm?: `0x${string}`;
     uniswapV3Factory?: `0x${string}`;
@@ -25,6 +29,9 @@ export const SMOKE_CHAINS: Record<string, SmokeChainConfig> = {
     pkEnvVar: "SMOKE_PK_SEPOLIA",
     faucetTokens: {
       weth: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+      usdc: "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
+    },
+    aaveReserves: {
       usdc: "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
     },
     protocols: {
