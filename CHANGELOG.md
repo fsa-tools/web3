@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.1] — 2026-04-20
+
+### Fixed
+- `waitForTransactionReceipt` em todos os entry points (uniswap-v3, aerodrome, aave) agora usa `confirmations: 2` — R-03
+- `ensureAllowance` emite `approve(0)` e aguarda receipt antes de `approve(MAX_UINT256)` quando `currentAllowance > 0` — previne revert em tokens USDT-like — T-04
+
 ## [1.8.0] — 2026-04-19
 
 ### Added
