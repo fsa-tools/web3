@@ -1,9 +1,4 @@
 export {
-  createClients,
-  type CreateClientsParams,
-  type ClientPair,
-} from "./client.js";
-export {
   getCurrentPrice,
   type GetCurrentPriceParams,
   type PriceResult,

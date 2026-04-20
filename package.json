@@ -18,7 +18,9 @@
     "./utils": { "import": "./dist/src/utils/index.js", "types": "./dist/src/utils/index.d.ts" },
     "./math": { "import": "./dist/src/math/index.js", "types": "./dist/src/math/index.d.ts" },
     "./abis": { "import": "./dist/src/abis/index.js", "types": "./dist/src/abis/index.d.ts" },
-    "./constants": { "import": "./dist/src/constants/index.js", "types": "./dist/src/constants/index.d.ts" }
+    "./constants": { "import": "./dist/src/constants/index.js", "types": "./dist/src/constants/index.d.ts" },
+    "./errors": { "import": "./dist/src/errors.js", "types": "./dist/src/errors.d.ts" },
+    "./context": { "import": "./dist/src/context.js", "types": "./dist/src/context.d.ts" }
   },
   "scripts": {
     "build": "tsc",

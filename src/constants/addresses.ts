@@ -17,6 +17,7 @@ export type ChainAddresses = {
   aave?: AaveAddresses;
 };
 
+/** @internal — use ctx.addresses via createChainContext instead of direct access */
 export const ADDRESSES: Record<number, ChainAddresses> = {
   8453: {
     weth: "0x4200000000000000000000000000000000000006",
