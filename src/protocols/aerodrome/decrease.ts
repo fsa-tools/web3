@@ -42,6 +42,7 @@ export async function decreaseLiquidity(
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: txHash,
+    confirmations: 2,
   });
 
   const eventLog = receipt.logs.find((log) => log.topics[0] === DECREASE_TOPIC);

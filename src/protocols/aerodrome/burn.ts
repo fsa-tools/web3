@@ -16,6 +16,7 @@ export async function burnPosition(
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: txHash,
+    confirmations: 2,
   });
 
   return { txHash, gasUsed: receipt.gasUsed };

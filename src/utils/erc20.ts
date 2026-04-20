@@ -43,6 +43,15 @@ export async function ensureAllowance(
   if (currentAllowance >= amount) {
     return { approved: false };
   }
+  if (currentAllowance > 0n) {
+    const resetHash = await walletClient.writeContract({
+      address: token,
+      abi: ERC20_ABI,
+      functionName: "approve",
+      args: [spender, 0n],
+    });
+    await publicClient.waitForTransactionReceipt({ hash: resetHash });
+  }
   const txHash = await walletClient.writeContract({
     address: token,
     abi: ERC20_ABI,

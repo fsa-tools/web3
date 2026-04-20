@@ -23,7 +23,7 @@ export async function supply(params: SupplyParams): Promise<SupplyResult> {
     args: [asset, amount, recipient, REFERRAL_CODE],
   });
 
-  await publicClient.waitForTransactionReceipt({ hash });
+  await publicClient.waitForTransactionReceipt({ hash, confirmations: 2 });
 
   return { txHash: hash };
 }

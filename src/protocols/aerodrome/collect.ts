@@ -27,6 +27,7 @@ export async function collectFees(
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: txHash,
+    confirmations: 2,
   });
 
   const eventLog = receipt.logs.find((log) => log.topics[0] === COLLECT_TOPIC);

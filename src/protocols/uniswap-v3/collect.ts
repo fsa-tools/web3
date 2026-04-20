@@ -39,7 +39,10 @@ export async function collectFees(
     ...(gasOptions ?? {}),
   });
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash,
+    confirmations: 2,
+  });
 
   const logs = parseEventLogs({
     abi: NPM_ABI,

@@ -20,7 +20,10 @@ export async function burnPosition(params: BurnParams): Promise<BurnResult> {
     ...(gasOptions ?? {}),
   });
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash,
+    confirmations: 2,
+  });
 
   return { txHash: hash, gasUsed: receipt.gasUsed };
 }

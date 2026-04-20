@@ -25,7 +25,10 @@ export async function withdraw(
     args: [asset, amount, recipient],
   });
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash,
+    confirmations: 2,
+  });
 
   const eventLog = receipt.logs.find((log) => log.topics[0] === WITHDRAW_TOPIC);
 
