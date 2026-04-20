@@ -25,11 +25,11 @@ export async function getTokenDecimals(
     if (cached !== undefined) return cached;
   }
 
-  const decimals = (await ctx.publicClient.readContract({
+  const decimals = await ctx.publicClient.readContract({
     address: params.token,
     abi: ERC20_ABI,
     functionName: "decimals",
-  })) as number;
+  });
 
   if (ctx.decimalsCache) {
     ctx.decimalsCache.set(cacheKey(chainId, params.token), decimals);

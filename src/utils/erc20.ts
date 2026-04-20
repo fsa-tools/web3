@@ -35,12 +35,12 @@ export async function ensureAllowance(
   if (amount === 0n) {
     return { approved: false };
   }
-  const currentAllowance = (await publicClient.readContract({
+  const currentAllowance = await publicClient.readContract({
     address: token,
     abi: ERC20_ABI,
     functionName: "allowance",
     args: [walletClient.account.address, spender],
-  })) as bigint;
+  });
   if (currentAllowance >= amount) {
     return { approved: false };
   }
@@ -69,10 +69,10 @@ export async function getBalance(
   ctx: ChainContext,
   params: GetBalanceParams,
 ): Promise<bigint> {
-  return (await ctx.publicClient.readContract({
+  return await ctx.publicClient.readContract({
     address: params.token,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [params.owner],
-  })) as bigint;
+  });
 }

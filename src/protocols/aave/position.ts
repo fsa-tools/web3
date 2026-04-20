@@ -15,19 +15,19 @@ export async function getPositionValue(
 ): Promise<PositionValue> {
   const { publicClient } = ctx;
 
-  const balance = (await publicClient.readContract({
+  const balance = await publicClient.readContract({
     address: params.aTokenAddress,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [params.owner],
-  })) as bigint;
+  });
 
-  const decimals = (await publicClient.readContract({
+  const decimals = await publicClient.readContract({
     address: params.aTokenAddress,
     abi: ERC20_ABI,
     functionName: "decimals",
     args: [],
-  })) as number;
+  });
 
   return { balance, decimals };
 }
