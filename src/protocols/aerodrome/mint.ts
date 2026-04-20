@@ -1,6 +1,7 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
 import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
+import { SlippageExceededError } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
 import type { MintOperationParams, PositionResult } from "./types.js";
 
@@ -17,7 +18,7 @@ export async function mintPosition(
     throw new Error("mintPosition requires walletClient in ChainContext");
   }
   if (params.slippageBps < 0 || params.slippageBps > MAX_SLIPPAGE_BPS) {
-    throw new Error("slippageBps exceeds maximum (5000 = 50%)");
+    throw new SlippageExceededError(params.slippageBps, MAX_SLIPPAGE_BPS);
   }
 
   validateAddress(params.npmAddress);

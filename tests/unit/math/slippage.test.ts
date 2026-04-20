@@ -20,8 +20,8 @@ describe("slippage", () => {
   });
 
   it("applySlippage rejects out-of-range bps", () => {
-    expect(() => applySlippage(1n, -1)).toThrow(/between 0 and 10000/);
-    expect(() => applySlippage(1n, 10_001)).toThrow(/between 0 and 10000/);
+    expect(() => applySlippage(1n, -1)).toThrow(/exceeds maximum/);
+    expect(() => applySlippage(1n, 10_001)).toThrow(/exceeds maximum/);
   });
 
   it("applySlippage allows exactly 5000 bps (50%)", () => {
