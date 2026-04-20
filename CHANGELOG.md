@@ -1,18 +1,48 @@
 # Changelog
 
-## [2.0.0] — TBD
+## [2.0.0] — 2026-04-20
 
 ### Breaking Changes
-- `createClients` removido — use `createChainContext` de `@fsa/web3/context`
-- Todas as funções de protocolo e utils recebem `(ctx: ChainContext, params)` em vez de flat object
-- Tipos renomeados: `MintParams` → `MintOperationParams`, `SupplyParams` → `SupplyOperationParams`, etc.
-- `_resetCache` removido — cache agora é `ctx.decimalsCache` (Map injetável)
+
+#### API de Funções
+Todas as funções de protocolo e utils agora recebem `(ctx: ChainContext, params)` em vez de flat object.
+
+| Função | Assinatura v1.x | Assinatura v2.0 |
+|--------|-----------------|-----------------|
+| `mintPosition` (uniswap-v3) | `(params: MintParams)` | `(ctx, params: MintOperationParams)` |
+| `mintPosition` (aerodrome) | `(params: AerodromeMintParams)` | `(ctx, params: MintOperationParams)` |
+| `decreaseLiquidity` | `(params: DecreaseParams)` | `(ctx, params: DecreaseOperationParams)` |
+| `collectFees` | `(params: CollectParams)` | `(ctx, params: CollectOperationParams)` |
+| `burnPosition` | `(params: BurnParams)` | `(ctx, params: BurnOperationParams)` |
+| `supply` (aave) | `(params: SupplyParams)` | `(ctx, params: SupplyOperationParams)` |
+| `withdraw` (aave) | `(params: WithdrawParams)` | `(ctx, params: WithdrawOperationParams)` |
+| `getPositionValue` | `(params: GetPositionValueParams)` | `(ctx, params: GetPositionValueOperationParams)` |
+| `getUserAccountData` | `(params: GetUserAccountDataParams)` | `(ctx, params: GetUserAccountDataOperationParams)` |
+| `getTokenDecimals` | `({ publicClient, token })` | `(ctx, { token })` |
+| `ensureAllowance` | `({ publicClient, walletClient, ... })` | `(ctx, { token, spender, amount })` |
+| `getBalance` | `({ publicClient, token, owner })` | `(ctx, { token, owner })` |
+| `estimateGas` | `({ publicClient, to, ... })` | `(ctx, { to, ... })` |
+| `withGasGuard` | `(fn, { publicClient, ... })` | `(ctx, fn, { ... })` |
+| `estimateDryRunCost` | `({ publicClient, ... })` | `(ctx, { ... })` |
+| `getEthPriceUsd` | `({ publicClient, wethUsdcPoolAddress })` | `(ctx, { wethUsdcPoolAddress })` |
+| `getCurrentPrice` | `({ publicClient, poolAddress })` | `(ctx, { poolAddress })` |
+
+#### Remoções
+- `createClients` removido de `@fsa/web3/utils` — use `createChainContext` de `@fsa/web3/context`
+- `_resetCache()` removido do módulo `decimals` — cache agora é `ctx.decimalsCache` (Map injetável via ChainContext)
+- Tipos renomeados: `MintParams → MintOperationParams`, `SupplyParams → SupplyOperationParams`, `WithdrawParams → WithdrawOperationParams`, `DecreaseParams → DecreaseOperationParams`, `BurnParams → BurnOperationParams`, `CollectParams → CollectOperationParams`
+
+#### Erros
+- Todos os `throw new Error(string)` substituídos por classes tipadas — catching por `instanceof` agora funciona
+- Construtores com campos públicos: `ChainNotSupportedError.chainId`, `ProtocolNotSupportedError.protocol`, `SlippageExceededError.bps/max`, `ReceiptEventNotFoundError.eventName/txHash`
 
 ### Added
-- `ChainContext` — contrato central injetável (import from `@fsa/web3/context`)
-- `createChainContext(params)` — cria contexto com transport fallback sempre ativo
-- Erros tipados: `ChainNotSupportedError`, `ProtocolNotSupportedError`, `ReserveInactiveError`, `InsufficientAllowanceError`, `SlippageExceededError`, `AddressValidationError`, `ReceiptEventNotFoundError`
-- `./errors` e `./context` em package.json exports
+- `ChainContext` — contrato central injetável (`publicClient`, `walletClient?`, `addresses`, `decimalsCache?`)
+- `createChainContext(params)` — cria contexto com transport fallback (`viem fallback()`) sempre ativo; suporta `rpcUrls: string[]`
+- Typed errors em `src/errors.ts`: `ChainNotSupportedError`, `ProtocolNotSupportedError`, `ReserveInactiveError`, `InsufficientAllowanceError`, `SlippageExceededError`, `AddressValidationError`, `ReceiptEventNotFoundError`
+- Exports `./errors` e `./context` em `package.json`
+- `tests/types/viem-inference.test-d.ts` — type-level tests para ChainContext e erros tipados
+- `tests/smoke/context.smoke.test.ts` — smoke test de fallback RPC
 
 ### Migration Guide
 > Veja README.md — seção "Migrating from v1.x to v2.0"
@@ -38,16 +68,6 @@
 - Smoke Uniswap V3: gate adicionado em `chainAddrs?.wethUsdcPool` + wrap ETH→WETH automático quando saldo insuficiente
 - Smoke Aerodrome: tipagem correta (`mintPosition`, `decreaseLiquidity`, `collectFees`, `burnPosition`; `nftId`; `slot0` + `positions()` para liquidity)
 - Aerodrome Finance não tem deployment em Base Sepolia (verificado 2026-04-19 via `eth_getCode`) — smoke skipa por design
-
-## [Unreleased]
-
-### Changed
-- `SmokeChainConfig` ganhou campo opcional `aaveReserves?: { weth?; usdc? }` para desacoplar tokens listados no Aave Pool V3 de `faucetTokens` (que atende Uniswap/Aerodrome). `aave.smoke` agora usa `aaveReserves.usdc` como `asset` e no gate `canRun` — mais explícito sobre a intenção. Mensagem de warn em saldo insuficiente orienta o uso do `mint()` público das reservas testnet.
-- Sepolia: `aaveReserves.usdc` populado via Aave Address Book (`0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8`, mesmo endereço que `faucetTokens.usdc` — Aave V3 Sepolia lista esse token como reserve underlying).
-- Polygon Amoy: `aaveReserves` omitido — Aave V3 não está deployado em Amoy per Address Book; smoke skipa por design.
-
-### Notes
-- Esta mudança é refactor arquitetural, **não** corrige o revert `51 (RESERVE_INACTIVE_OR_NOT_LISTED)` em Sepolia. A hipótese inicial (endereço errado de USDC) foi descartada: Address Book confirma que o endereço atual é o correto. Investigação do root cause real (reserve frozen/paused, supply cap, approval, pool address) fica para task separada.
 
 ## [1.7.1] — 2026-04-18
 
