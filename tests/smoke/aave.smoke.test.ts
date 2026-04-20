@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createClients } from "../../src/utils/client.js";
+import { createChainContext } from "../../src/context.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
 import * as aave from "../../src/protocols/aave/index.js";
@@ -14,15 +14,20 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
     const asset = cfg.aaveReserves!.usdc!;
 
     it("supply 1 USDC → getUserAccountData → withdraw", async () => {
-      const { publicClient, walletClient } = createClients({
+      const ctx = createChainContext({
         chainId: cfg.chainId,
-        rpcUrl: env!.rpcUrl,
+        rpcUrls: [env!.rpcUrl],
         privateKey: env!.pk,
+        decimalsCache: new Map(),
       });
-      const owner = walletClient!.account.address;
-      const decimals = await getTokenDecimals({ publicClient, token: asset });
+      const owner = ctx.walletClient!.account.address;
+      const decimals = await getTokenDecimals(ctx, { token: asset });
       const amount = 10n ** BigInt(decimals); // 1 USDC
-      const bal = await getBalance({ publicClient, token: asset, owner });
+      const bal = await getBalance({
+        publicClient: ctx.publicClient,
+        token: asset,
+        owner,
+      });
       if (bal < amount) {
         console.warn(
           `Skipping aave ${cfg.name} — insufficient USDC on Aave reserve ${asset}. ` +
@@ -32,15 +37,15 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
       }
 
       await ensureAllowance({
-        publicClient,
-        walletClient: walletClient!,
+        publicClient: ctx.publicClient,
+        walletClient: ctx.walletClient!,
         token: asset,
         spender: pool,
         amount,
       });
       const supplyResult = await aave.supply({
-        publicClient,
-        walletClient: walletClient!,
+        publicClient: ctx.publicClient,
+        walletClient: ctx.walletClient!,
         chainId: cfg.chainId,
         asset,
         amount,
@@ -48,15 +53,15 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
       expect(supplyResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
       const acct = await aave.getUserAccountData({
-        publicClient,
+        publicClient: ctx.publicClient,
         chainId: cfg.chainId,
         user: owner,
       });
       expect(acct.totalCollateralBase).toBeGreaterThan(0n);
 
       const withdrawResult = await aave.withdraw({
-        publicClient,
-        walletClient: walletClient!,
+        publicClient: ctx.publicClient,
+        walletClient: ctx.walletClient!,
         chainId: cfg.chainId,
         asset,
         amount,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createClients } from "../../src/utils/client.js";
+import { createChainContext } from "../../src/context.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
 import {
@@ -46,35 +47,40 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
     it(
       `full lifecycle: mint → decrease 50% → collect → burn`,
       async () => {
-        const { publicClient, walletClient } = createClients({
+        const ctx = createChainContext({
           chainId: cfg.chainId,
-          rpcUrl: env!.rpcUrl,
+          rpcUrls: [env!.rpcUrl],
           privateKey: env!.pk,
+          decimalsCache: new Map(),
         });
-        const owner = walletClient!.account.address;
+        const owner = ctx.walletClient!.account.address;
         const npm = cfg.protocols.uniswapV3Npm!;
 
         const [wethDec, usdcDec] = await Promise.all([
-          getTokenDecimals({ publicClient, token: weth }),
-          getTokenDecimals({ publicClient, token: usdc }),
+          getTokenDecimals(ctx, { token: weth }),
+          getTokenDecimals(ctx, { token: usdc }),
         ]);
         const wethMin = 10n ** BigInt(wethDec - WETH_MIN_EXPONENT);
         const usdcMin = 10n ** BigInt(usdcDec);
 
-        const wethBal = await getBalance({ publicClient, token: weth, owner });
+        const wethBal = await getBalance({
+          publicClient: ctx.publicClient,
+          token: weth,
+          owner,
+        });
         if (wethBal < wethMin) {
-          const wrapHash = await walletClient!.writeContract({
+          const wrapHash = await ctx.walletClient!.writeContract({
             address: weth,
             abi: WETH_DEPOSIT_ABI,
             functionName: "deposit",
             value: wethMin,
           });
-          await publicClient.waitForTransactionReceipt({ hash: wrapHash });
+          await ctx.publicClient.waitForTransactionReceipt({ hash: wrapHash });
         }
 
         const [wethBalFinal, usdcBal] = await Promise.all([
-          getBalance({ publicClient, token: weth, owner }),
-          getBalance({ publicClient, token: usdc, owner }),
+          getBalance({ publicClient: ctx.publicClient, token: weth, owner }),
+          getBalance({ publicClient: ctx.publicClient, token: usdc, owner }),
         ]);
         if (wethBalFinal < wethMin || usdcBal < usdcMin) {
           console.warn(
@@ -84,15 +90,15 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         }
 
         await ensureAllowance({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           token: weth,
           spender: npm,
           amount: wethMin,
         });
         await ensureAllowance({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           token: usdc,
           spender: npm,
           amount: usdcMin,
@@ -105,8 +111,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECS);
 
         const mintResult = await mintPosition({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           token0,
           token1,
@@ -124,8 +130,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         const remainingLiquidity = mintResult.liquidity - halfLiquidity;
 
         const decResult = await decreaseLiquidity({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           tokenId: mintResult.tokenId,
           liquidity: halfLiquidity,
@@ -136,8 +142,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         expect(decResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
         const collectResult1 = await collectFees({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           tokenId: mintResult.tokenId,
           recipient: owner,
@@ -145,8 +151,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         expect(collectResult1.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
         await decreaseLiquidity({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           tokenId: mintResult.tokenId,
           liquidity: remainingLiquidity,
@@ -155,8 +161,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
           recipient: owner,
         });
         const collectResult2 = await collectFees({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           tokenId: mintResult.tokenId,
           recipient: owner,
@@ -164,8 +170,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         expect(collectResult2.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
         const burnResult = await burnPosition({
-          publicClient,
-          walletClient: walletClient!,
+          publicClient: ctx.publicClient,
+          walletClient: ctx.walletClient!,
           chainId: cfg.chainId,
           tokenId: mintResult.tokenId,
         });

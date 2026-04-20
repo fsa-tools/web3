@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createClients } from "../../src/utils/client.js";
+import { createChainContext } from "../../src/context.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
 import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
@@ -12,11 +13,12 @@ for (const [key, cfg] of Object.entries(SMOKE_CHAINS)) {
     const spender = cfg.protocols.uniswapV3Npm ?? cfg.protocols.aavePool!;
 
     it(`getTokenDecimals reads USDC/WETH decimals`, async () => {
-      const { publicClient } = createClients({
+      const ctx = createChainContext({
         chainId: cfg.chainId,
-        rpcUrl: env.rpcUrl,
+        rpcUrls: [env.rpcUrl],
+        decimalsCache: new Map(),
       });
-      const dec = await getTokenDecimals({ publicClient, token });
+      const dec = await getTokenDecimals(ctx, { token });
       expect([6, 8, 18]).toContain(dec);
     });
 
