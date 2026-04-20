@@ -39,7 +39,6 @@ export async function decreaseLiquidity(
   const effectiveDeadline =
     deadline ?? BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_OFFSET;
 
-  // Simular primeiro para obter estimates e aplicar slippage sobre valores reais
   const { result } = await withRetry(() =>
     publicClient.simulateContract({
       address: npmAddress,
