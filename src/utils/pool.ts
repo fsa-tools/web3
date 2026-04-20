@@ -1,8 +1,9 @@
-import type { Abi, Address, PublicClient } from "viem";
+// src/utils/pool.ts
+import type { Abi, Address } from "viem";
 import { POOL_SLOT0_ABI } from "../abis/pool.js";
+import type { ChainContext } from "../context.js";
 
 export type GetCurrentPriceParams = {
-  publicClient: PublicClient;
   poolAddress: Address;
   poolAbi?: Abi;
 };
@@ -13,10 +14,11 @@ export type PriceResult = {
 };
 
 export async function getCurrentPrice(
+  ctx: ChainContext,
   params: GetCurrentPriceParams,
 ): Promise<PriceResult> {
   const abi = params.poolAbi ?? POOL_SLOT0_ABI;
-  const result = (await params.publicClient.readContract({
+  const result = (await ctx.publicClient.readContract({
     address: params.poolAddress,
     abi,
     functionName: "slot0",

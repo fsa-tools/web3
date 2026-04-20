@@ -1,10 +1,11 @@
-import type { Abi, Address, PublicClient } from "viem";
+// src/utils/position.ts
+import type { Abi, Address } from "viem";
 import { NPM_ABI } from "../abis/npm.js";
+import type { ChainContext } from "../context.js";
 
 const ZERO_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
 export type GetPositionParams = {
-  publicClient: PublicClient;
   npmAddress: Address;
   nftId: bigint;
   npmAbi?: Abi;
@@ -20,11 +21,12 @@ export type OnChainPosition = {
 };
 
 export async function getOnChainPosition(
+  ctx: ChainContext,
   params: GetPositionParams,
 ): Promise<OnChainPosition> {
   const abi = params.npmAbi ?? NPM_ABI;
   try {
-    const result = (await params.publicClient.readContract({
+    const result = (await ctx.publicClient.readContract({
       address: params.npmAddress,
       abi,
       functionName: "positions",
