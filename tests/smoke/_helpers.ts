@@ -1,4 +1,6 @@
 import type { Hex } from "viem";
+import { createChainContext } from "../../src/context.js";
+import type { ChainContext } from "../../src/context.js";
 
 export type SmokeChainConfig = {
   chainId: number;
@@ -12,13 +14,6 @@ export type SmokeChainConfig = {
   aaveReserves?: {
     weth?: `0x${string}`;
     usdc?: `0x${string}`;
-  };
-  protocols: {
-    uniswapV3Npm?: `0x${string}`;
-    uniswapV3Factory?: `0x${string}`;
-    aavePool?: `0x${string}`;
-    aerodromeNpm?: `0x${string}`;
-    aerodromeWethUsdcPool?: `0x${string}`;
   };
 };
 
@@ -35,12 +30,6 @@ export const SMOKE_CHAINS: Record<string, SmokeChainConfig> = {
     aaveReserves: {
       usdc: "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
     },
-    protocols: {
-      uniswapV3Npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
-      uniswapV3Factory: "0x0227628f3F023bb0B980b67D528571c95c6DaC1c",
-      aavePool: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
-      // Aerodrome não tem deployment em Sepolia — smoke requer Base Sepolia
-    },
   },
   polygonAmoy: {
     chainId: 80002,
@@ -51,13 +40,7 @@ export const SMOKE_CHAINS: Record<string, SmokeChainConfig> = {
       weth: "0x52eF3d68BaB452a294342DC3e5f464d7f610f72E",
       usdc: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
     },
-    protocols: {
-      uniswapV3Npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
-      aavePool: "0x1758d4e6f68166C4B2d9d0F049F33dEB399Daa1F",
-      // Aerodrome não tem deployment em Amoy — smoke requer Base Sepolia
-    },
   },
-  // baseSepolia added in Task 4 after verifying Aerodrome deployment
 };
 
 export function requireEnv(key: string): string {
@@ -66,11 +49,15 @@ export function requireEnv(key: string): string {
   return v;
 }
 
-export function loadChainEnv(
-  cfg: SmokeChainConfig,
-): { rpcUrl: string; pk: Hex } | null {
-  const rpcUrl = process.env[cfg.rpcEnvVar];
+export function loadChainContext(cfg: SmokeChainConfig): ChainContext | null {
+  const rpcRaw = process.env[cfg.rpcEnvVar];
   const pk = process.env[cfg.pkEnvVar];
-  if (!rpcUrl || !pk) return null;
-  return { rpcUrl, pk: pk as Hex };
+  if (!rpcRaw || !pk) return null;
+
+  const rpcUrls = rpcRaw.split(",").map((u) => u.trim());
+  return createChainContext({
+    chainId: cfg.chainId,
+    rpcUrls,
+    privateKey: pk as Hex,
+  });
 }
