@@ -7,3 +7,5 @@ export default defineConfig({
     globals: false,
   },
 });
+
+// Type-level tests are checked via: npm run type-check or npx tsc --noEmit
