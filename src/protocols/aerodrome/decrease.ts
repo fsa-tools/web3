@@ -1,43 +1,41 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
 import { validateAddress } from "../../utils/address.js";
-import type { AerodromeDecreaseParams, DecreaseResult } from "./types.js";
+import type { ChainContext } from "../../context.js";
+import type { DecreaseOperationParams, DecreaseResult } from "./types.js";
 
 const DEFAULT_DEADLINE_SECONDS = 1200n;
 const DECREASE_TOPIC =
   "0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4";
 
 export async function decreaseLiquidity(
-  params: AerodromeDecreaseParams,
+  ctx: ChainContext,
+  params: DecreaseOperationParams,
 ): Promise<DecreaseResult> {
-  const {
-    publicClient,
-    walletClient,
-    npmAddress,
-    nftId,
-    liquidity,
-    gasOptions,
-  } = params;
+  if (!ctx.walletClient) {
+    throw new Error("decreaseLiquidity requires walletClient in ChainContext");
+  }
+  const { publicClient, walletClient } = ctx;
 
-  validateAddress(npmAddress);
+  validateAddress(params.npmAddress);
 
   const deadline =
     params.deadline ??
     BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_SECONDS;
 
   const txHash = await walletClient.writeContract({
-    address: npmAddress,
+    address: params.npmAddress,
     abi: AERODROME_NPM_ABI,
     functionName: "decreaseLiquidity",
     args: [
       {
-        tokenId: nftId,
-        liquidity,
+        tokenId: params.nftId,
+        liquidity: params.liquidity,
         amount0Min: params.amount0Min ?? 0n,
         amount1Min: params.amount1Min ?? 0n,
         deadline,
       },
     ],
-    ...(gasOptions ?? {}),
+    ...(params.gasOptions ?? {}),
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({

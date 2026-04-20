@@ -1,17 +1,22 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
-import type { AerodromeBurnParams, BurnResult } from "./types.js";
+import type { ChainContext } from "../../context.js";
+import type { BurnOperationParams, BurnResult } from "./types.js";
 
 export async function burnPosition(
-  params: AerodromeBurnParams,
+  ctx: ChainContext,
+  params: BurnOperationParams,
 ): Promise<BurnResult> {
-  const { publicClient, walletClient, npmAddress, nftId, gasOptions } = params;
+  if (!ctx.walletClient) {
+    throw new Error("burnPosition requires walletClient in ChainContext");
+  }
+  const { publicClient, walletClient } = ctx;
 
   const txHash = await walletClient.writeContract({
-    address: npmAddress,
+    address: params.npmAddress,
     abi: AERODROME_NPM_ABI,
     functionName: "burn",
-    args: [nftId],
-    ...(gasOptions ?? {}),
+    args: [params.nftId],
+    ...(params.gasOptions ?? {}),
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({

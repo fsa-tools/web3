@@ -3,10 +3,10 @@ export { decreaseLiquidity } from "./decrease.js";
 export { collectFees } from "./collect.js";
 export { burnPosition } from "./burn.js";
 export type {
-  AerodromeMintParams,
-  AerodromeDecreaseParams,
-  AerodromeCollectParams,
-  AerodromeBurnParams,
+  MintOperationParams,
+  DecreaseOperationParams,
+  CollectOperationParams,
+  BurnOperationParams,
   PositionResult,
   DecreaseResult,
   CollectResult,

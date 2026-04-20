@@ -1,28 +1,33 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
-import type { AerodromeCollectParams, CollectResult } from "./types.js";
+import type { ChainContext } from "../../context.js";
+import type { CollectOperationParams, CollectResult } from "./types.js";
 
 const MAX_UINT128 = 2n ** 128n - 1n;
 const COLLECT_TOPIC =
   "0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01";
 
 export async function collectFees(
-  params: AerodromeCollectParams,
+  ctx: ChainContext,
+  params: CollectOperationParams,
 ): Promise<CollectResult> {
-  const { publicClient, walletClient, npmAddress, nftId, gasOptions } = params;
+  if (!ctx.walletClient) {
+    throw new Error("collectFees requires walletClient in ChainContext");
+  }
+  const { publicClient, walletClient } = ctx;
 
   const txHash = await walletClient.writeContract({
-    address: npmAddress,
+    address: params.npmAddress,
     abi: AERODROME_NPM_ABI,
     functionName: "collect",
     args: [
       {
-        tokenId: nftId,
+        tokenId: params.nftId,
         recipient: walletClient.account.address,
         amount0Max: MAX_UINT128,
         amount1Max: MAX_UINT128,
       },
     ],
-    ...(gasOptions ?? {}),
+    ...(params.gasOptions ?? {}),
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({

@@ -1,17 +1,7 @@
-import type {
-  Address,
-  Hash,
-  PublicClient,
-  WalletClient,
-  Transport,
-  Chain,
-  Account,
-} from "viem";
+import type { Address, Hash } from "viem";
 import type { GasOptions } from "../../utils/gas.js";
 
-export type AerodromeMintParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
+export type MintOperationParams = {
   npmAddress: Address;
   poolAddress: Address;
   token0: Address;
@@ -27,9 +17,7 @@ export type AerodromeMintParams = {
   gasOptions?: GasOptions;
 };
 
-export type AerodromeDecreaseParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
+export type DecreaseOperationParams = {
   npmAddress: Address;
   nftId: bigint;
   liquidity: bigint;
@@ -39,17 +27,13 @@ export type AerodromeDecreaseParams = {
   gasOptions?: GasOptions;
 };
 
-export type AerodromeCollectParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
+export type CollectOperationParams = {
   npmAddress: Address;
   nftId: bigint;
   gasOptions?: GasOptions;
 };
 
-export type AerodromeBurnParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
+export type BurnOperationParams = {
   npmAddress: Address;
   nftId: bigint;
   gasOptions?: GasOptions;

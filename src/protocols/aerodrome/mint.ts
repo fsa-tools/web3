@@ -1,67 +1,58 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
 import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
-import type { AerodromeMintParams, PositionResult } from "./types.js";
+import type { ChainContext } from "../../context.js";
+import type { MintOperationParams, PositionResult } from "./types.js";
 
 const DEFAULT_DEADLINE_SECONDS = 1200n;
 const INCREASE_LIQUIDITY_TOPIC =
   "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f";
+const MAX_SLIPPAGE_BPS = 5_000;
 
 export async function mintPosition(
-  params: AerodromeMintParams,
+  ctx: ChainContext,
+  params: MintOperationParams,
 ): Promise<PositionResult> {
-  const {
-    publicClient,
-    walletClient,
-    npmAddress,
-    token0,
-    token1,
-    tickSpacing,
-    tickLower,
-    tickUpper,
-    amount0Desired,
-    amount1Desired,
-    sqrtPriceX96,
-    slippageBps,
-    gasOptions,
-  } = params;
-
-  if (slippageBps < 0 || slippageBps > 5_000) {
+  if (!ctx.walletClient) {
+    throw new Error("mintPosition requires walletClient in ChainContext");
+  }
+  if (params.slippageBps < 0 || params.slippageBps > MAX_SLIPPAGE_BPS) {
     throw new Error("slippageBps exceeds maximum (5000 = 50%)");
   }
 
-  validateAddress(npmAddress);
-  validateAddress(token0);
-  validateAddress(token1);
+  validateAddress(params.npmAddress);
+  validateAddress(params.token0);
+  validateAddress(params.token1);
 
+  const { publicClient, walletClient } = ctx;
   const deadline =
     params.deadline ??
     BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_SECONDS;
 
-  const amount0Min = applySlippage(amount0Desired, slippageBps);
-  const amount1Min = applySlippage(amount1Desired, slippageBps);
+  const amount0Min = applySlippage(params.amount0Desired, params.slippageBps);
+  const amount1Min = applySlippage(params.amount1Desired, params.slippageBps);
 
   const txHash = await walletClient.writeContract({
-    address: npmAddress,
+    address: params.npmAddress,
     abi: AERODROME_NPM_ABI,
     functionName: "mint",
     args: [
       {
-        token0,
-        token1,
-        tickSpacing,
-        tickLower,
-        tickUpper,
-        amount0Desired,
-        amount1Desired,
+        token0: params.token0,
+        token1: params.token1,
+        tickSpacing: params.tickSpacing,
+        tickLower: params.tickLower,
+        tickUpper: params.tickUpper,
+        amount0Desired: params.amount0Desired,
+        amount1Desired: params.amount1Desired,
         amount0Min,
         amount1Min,
         recipient: walletClient.account.address,
         deadline,
-        sqrtPriceX96,
+        sqrtPriceX96: params.sqrtPriceX96,
       },
     ],
-    ...(gasOptions ?? {}),
+    ...(params.gasOptions ?? {}),
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({
