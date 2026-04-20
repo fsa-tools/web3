@@ -1,6 +1,6 @@
 {
   "name": "@fsa/web3",
-  "version": "1.8.0",
+  "version": "2.0.0-rc.0",
   "description": "Shared Web3 utilities: viem clients, ERC20 helpers, Uniswap V3 / Aerodrome / Aave V3 protocol wrappers",
   "repository": {
     "type": "git",

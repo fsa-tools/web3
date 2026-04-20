@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] — TBD
+
+### Breaking Changes
+- `createClients` removido — use `createChainContext` de `@fsa/web3/context`
+- Todas as funções de protocolo e utils recebem `(ctx: ChainContext, params)` em vez de flat object
+- Tipos renomeados: `MintParams` → `MintOperationParams`, `SupplyParams` → `SupplyOperationParams`, etc.
+- `_resetCache` removido — cache agora é `ctx.decimalsCache` (Map injetável)
+
+### Added
+- `ChainContext` — contrato central injetável (import from `@fsa/web3/context`)
+- `createChainContext(params)` — cria contexto com transport fallback sempre ativo
+- Erros tipados: `ChainNotSupportedError`, `ProtocolNotSupportedError`, `ReserveInactiveError`, `InsufficientAllowanceError`, `SlippageExceededError`, `AddressValidationError`, `ReceiptEventNotFoundError`
+- `./errors` e `./context` em package.json exports
+
+### Migration Guide
+> Veja README.md — seção "Migrating from v1.x to v2.0"
+
 ## [1.8.1] — 2026-04-20
 
 ### Fixed
