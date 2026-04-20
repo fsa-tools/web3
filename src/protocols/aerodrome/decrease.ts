@@ -4,6 +4,7 @@ import type { ChainContext } from "../../context.js";
 import type { DecreaseOperationParams, DecreaseResult } from "./types.js";
 
 const DEFAULT_DEADLINE_SECONDS = 1200n;
+// AERODROME_NPM_ABI excludes event definitions — parse raw log data directly
 const DECREASE_TOPIC =
   "0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4";
 

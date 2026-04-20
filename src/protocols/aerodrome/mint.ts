@@ -6,6 +6,7 @@ import type { ChainContext } from "../../context.js";
 import type { MintOperationParams, PositionResult } from "./types.js";
 
 const DEFAULT_DEADLINE_SECONDS = 1200n;
+// AERODROME_NPM_ABI excludes event definitions — parse raw log data directly
 const INCREASE_LIQUIDITY_TOPIC =
   "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f";
 const MAX_SLIPPAGE_BPS = 5_000;

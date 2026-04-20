@@ -71,3 +71,23 @@ export class ReceiptEventNotFoundError extends Error {
     this.name = "ReceiptEventNotFoundError";
   }
 }
+
+export class GasThresholdExceededError extends Error {
+  readonly estimatedCostUsd: number;
+  readonly thresholdUsd: number;
+  readonly retriesAttempted: number;
+
+  constructor(params: {
+    estimatedCostUsd: number;
+    thresholdUsd: number;
+    retriesAttempted: number;
+  }) {
+    super(
+      `Gas cost $${params.estimatedCostUsd.toFixed(4)} exceeds threshold $${params.thresholdUsd} after ${params.retriesAttempted} retries`,
+    );
+    this.name = "GasThresholdExceededError";
+    this.estimatedCostUsd = params.estimatedCostUsd;
+    this.thresholdUsd = params.thresholdUsd;
+    this.retriesAttempted = params.retriesAttempted;
+  }
+}

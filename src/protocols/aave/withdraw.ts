@@ -3,6 +3,7 @@ import type { ChainContext } from "../../context.js";
 import { ProtocolNotSupportedError } from "../../errors.js";
 import type { WithdrawOperationParams, WithdrawResult } from "./types.js";
 
+// AAVE_POOL_ABI excludes the full Withdraw event definition — parse raw log data directly
 const WITHDRAW_TOPIC =
   "0x3115d1449a7b732c986cba18244e897a145df0b3b24bf8bc15765c1514000b06";
 

@@ -3,6 +3,7 @@ import type { ChainContext } from "../../context.js";
 import type { CollectOperationParams, CollectResult } from "./types.js";
 
 const MAX_UINT128 = 2n ** 128n - 1n;
+// AERODROME_NPM_ABI excludes event definitions — parse raw log data directly
 const COLLECT_TOPIC =
   "0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01";
 

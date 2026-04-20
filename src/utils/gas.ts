@@ -1,6 +1,7 @@
 import type { Address, Hex } from "viem";
 import { POOL_ABI } from "../abis/pool.js";
 import type { ChainContext } from "../context.js";
+import { GasThresholdExceededError } from "../errors.js";
 
 export type EstimateGasParams = {
   to: Address;
@@ -77,25 +78,7 @@ export async function estimateGas(
   return { gasUnits, baseFeeGwei, gasCostEth };
 }
 
-export class GasThresholdExceededError extends Error {
-  readonly estimatedCostUsd: number;
-  readonly thresholdUsd: number;
-  readonly retriesAttempted: number;
-
-  constructor(params: {
-    estimatedCostUsd: number;
-    thresholdUsd: number;
-    retriesAttempted: number;
-  }) {
-    super(
-      `Gas cost $${params.estimatedCostUsd.toFixed(4)} exceeds threshold $${params.thresholdUsd} after ${params.retriesAttempted} retries`,
-    );
-    this.name = "GasThresholdExceededError";
-    this.estimatedCostUsd = params.estimatedCostUsd;
-    this.thresholdUsd = params.thresholdUsd;
-    this.retriesAttempted = params.retriesAttempted;
-  }
-}
+export { GasThresholdExceededError } from "../errors.js";
 
 function estimateCostEth(
   expectedGasUnits: bigint,
