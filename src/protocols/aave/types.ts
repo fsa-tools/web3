@@ -1,17 +1,6 @@
-import type {
-  Address,
-  Hash,
-  WalletClient,
-  PublicClient,
-  Transport,
-  Chain,
-  Account,
-} from "viem";
+import type { Address, Hash } from "viem";
 
-export type SupplyParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
-  chainId: number;
+export type SupplyOperationParams = {
   asset: Address;
   amount: bigint;
   onBehalfOf?: Address;
@@ -21,10 +10,7 @@ export type SupplyResult = {
   txHash: Hash;
 };
 
-export type WithdrawParams = {
-  publicClient: PublicClient;
-  walletClient: WalletClient<Transport, Chain, Account>;
-  chainId: number;
+export type WithdrawOperationParams = {
   asset: Address;
   amount: bigint;
   to?: Address;
@@ -35,8 +21,7 @@ export type WithdrawResult = {
   amount: bigint;
 };
 
-export type GetPositionValueParams = {
-  publicClient: PublicClient;
+export type GetPositionValueOperationParams = {
   aTokenAddress: Address;
   owner: Address;
 };
@@ -46,9 +31,7 @@ export type PositionValue = {
   decimals: number;
 };
 
-export type GetUserAccountDataParams = {
-  publicClient: PublicClient;
-  chainId: number;
+export type GetUserAccountDataOperationParams = {
   user: Address;
 };
 

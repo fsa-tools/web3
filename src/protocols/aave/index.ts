@@ -2,12 +2,12 @@ export { supply } from "./supply.js";
 export { withdraw } from "./withdraw.js";
 export { getPositionValue, getUserAccountData } from "./position.js";
 export type {
-  SupplyParams,
+  SupplyOperationParams,
   SupplyResult,
-  WithdrawParams,
+  WithdrawOperationParams,
   WithdrawResult,
-  GetPositionValueParams,
+  GetPositionValueOperationParams,
   PositionValue,
-  GetUserAccountDataParams,
+  GetUserAccountDataOperationParams,
   AccountData,
 } from "./types.js";

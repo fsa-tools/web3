@@ -1,28 +1,34 @@
 import { AAVE_POOL_ABI } from "../../abis/aave-pool.js";
-import { ADDRESSES } from "../../constants/addresses.js";
-import type { WithdrawParams, WithdrawResult } from "./types.js";
+import type { ChainContext } from "../../context.js";
+import { ProtocolNotSupportedError } from "../../errors.js";
+import type { WithdrawOperationParams, WithdrawResult } from "./types.js";
 
 const WITHDRAW_TOPIC =
   "0x3115d1449a7b732c986cba18244e897a145df0b3b24bf8bc15765c1514000b06";
 
 export async function withdraw(
-  params: WithdrawParams,
+  ctx: ChainContext,
+  params: WithdrawOperationParams,
 ): Promise<WithdrawResult> {
-  const { publicClient, walletClient, chainId, asset, amount, to } = params;
-
-  const chainAddrs = ADDRESSES[chainId];
-  if (!chainAddrs?.aave) {
-    throw new Error(`chainId ${chainId} is not supported for Aave`);
+  if (!ctx.walletClient) {
+    throw new Error("withdraw requires walletClient in ChainContext");
+  }
+  if (!ctx.addresses.aave) {
+    throw new ProtocolNotSupportedError(
+      ctx.publicClient.chain?.id ?? 0,
+      "aave",
+    );
   }
 
-  const poolAddress = chainAddrs.aave.pool;
-  const recipient = to ?? walletClient.account.address;
+  const { publicClient, walletClient } = ctx;
+  const poolAddress = ctx.addresses.aave.pool;
+  const recipient = params.to ?? walletClient.account.address;
 
   const hash = await walletClient.writeContract({
     address: poolAddress,
     abi: AAVE_POOL_ABI,
     functionName: "withdraw",
-    args: [asset, amount, recipient],
+    args: [params.asset, params.amount, recipient],
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({

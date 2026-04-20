@@ -1,27 +1,29 @@
 import { ERC20_ABI } from "../../abis/erc20.js";
 import { AAVE_POOL_ABI } from "../../abis/aave-pool.js";
-import { ADDRESSES } from "../../constants/addresses.js";
+import type { ChainContext } from "../../context.js";
+import { ProtocolNotSupportedError } from "../../errors.js";
 import type {
-  GetPositionValueParams,
+  GetPositionValueOperationParams,
+  GetUserAccountDataOperationParams,
   PositionValue,
-  GetUserAccountDataParams,
   AccountData,
 } from "./types.js";
 
 export async function getPositionValue(
-  params: GetPositionValueParams,
+  ctx: ChainContext,
+  params: GetPositionValueOperationParams,
 ): Promise<PositionValue> {
-  const { publicClient, aTokenAddress, owner } = params;
+  const { publicClient } = ctx;
 
   const balance = (await publicClient.readContract({
-    address: aTokenAddress,
+    address: params.aTokenAddress,
     abi: ERC20_ABI,
     functionName: "balanceOf",
-    args: [owner],
+    args: [params.owner],
   })) as bigint;
 
   const decimals = (await publicClient.readContract({
-    address: aTokenAddress,
+    address: params.aTokenAddress,
     abi: ERC20_ABI,
     functionName: "decimals",
     args: [],
@@ -31,20 +33,21 @@ export async function getPositionValue(
 }
 
 export async function getUserAccountData(
-  params: GetUserAccountDataParams,
+  ctx: ChainContext,
+  params: GetUserAccountDataOperationParams,
 ): Promise<AccountData> {
-  const { publicClient, chainId, user } = params;
-
-  const chainAddrs = ADDRESSES[chainId];
-  if (!chainAddrs?.aave) {
-    throw new Error(`chainId ${chainId} is not supported for Aave`);
+  if (!ctx.addresses.aave) {
+    throw new ProtocolNotSupportedError(
+      ctx.publicClient.chain?.id ?? 0,
+      "aave",
+    );
   }
 
-  const result = (await publicClient.readContract({
-    address: chainAddrs.aave.pool,
+  const result = (await ctx.publicClient.readContract({
+    address: ctx.addresses.aave.pool,
     abi: AAVE_POOL_ABI,
     functionName: "getUserAccountData",
-    args: [user],
+    args: [params.user],
   })) as [bigint, bigint, bigint, bigint, bigint, bigint];
 
   return {
