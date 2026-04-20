@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { createClients } from "../../src/utils/client.js";
 import { createChainContext } from "../../src/context.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
@@ -110,10 +109,7 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         const amount1Desired = weth < usdc ? usdcMin : wethMin;
         const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECS);
 
-        const mintResult = await mintPosition({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+        const mintResult = await mintPosition(ctx, {
           token0,
           token1,
           fee: 500,
@@ -129,50 +125,34 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         const halfLiquidity = mintResult.liquidity / 2n;
         const remainingLiquidity = mintResult.liquidity - halfLiquidity;
 
-        const decResult = await decreaseLiquidity({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+        const decResult = await decreaseLiquidity(ctx, {
           tokenId: mintResult.tokenId,
           liquidity: halfLiquidity,
           slippageBps: SLIPPAGE_BPS,
           deadline,
-          recipient: owner,
         });
         expect(decResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
-        const collectResult1 = await collectFees({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+        const collectResult1 = await collectFees(ctx, {
           tokenId: mintResult.tokenId,
           recipient: owner,
         });
         expect(collectResult1.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
-        await decreaseLiquidity({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+        await decreaseLiquidity(ctx, {
           tokenId: mintResult.tokenId,
           liquidity: remainingLiquidity,
           slippageBps: SLIPPAGE_BPS,
           deadline,
-          recipient: owner,
         });
-        const collectResult2 = await collectFees({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+
+        const collectResult2 = await collectFees(ctx, {
           tokenId: mintResult.tokenId,
           recipient: owner,
         });
         expect(collectResult2.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
 
-        const burnResult = await burnPosition({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
-          chainId: cfg.chainId,
+        const burnResult = await burnPosition(ctx, {
           tokenId: mintResult.tokenId,
         });
         expect(burnResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);

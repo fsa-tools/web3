@@ -1,19 +1,40 @@
 import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
-import { ADDRESSES } from "../../constants/addresses.js";
 import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
-import type { MintParams, PositionResult } from "./types.js";
+import {
+  ProtocolNotSupportedError,
+  SlippageExceededError,
+  ReceiptEventNotFoundError,
+} from "../../errors.js";
+import type { ChainContext } from "../../context.js";
+import type { MintOperationParams, PositionResult } from "./types.js";
 
 const DEFAULT_DEADLINE_OFFSET = 1200n;
+const MAX_SLIPPAGE_BPS = 5_000;
 
 export async function mintPosition(
-  params: MintParams,
+  ctx: ChainContext,
+  params: MintOperationParams,
 ): Promise<PositionResult> {
+  if (!ctx.walletClient) {
+    throw new Error("mintPosition requires walletClient in ChainContext");
+  }
+
+  if (params.slippageBps < 0 || params.slippageBps > MAX_SLIPPAGE_BPS) {
+    throw new SlippageExceededError(params.slippageBps, MAX_SLIPPAGE_BPS);
+  }
+
+  const npmAddress = ctx.addresses.uniswapV3?.npm;
+  if (!npmAddress) {
+    throw new ProtocolNotSupportedError(
+      ctx.publicClient.chain?.id ?? 0,
+      "uniswapV3",
+    );
+  }
+
+  const { publicClient, walletClient } = ctx;
   const {
-    walletClient,
-    publicClient,
-    chainId,
     token0,
     token1,
     fee,
@@ -26,22 +47,11 @@ export async function mintPosition(
     gasOptions,
   } = params;
 
-  if (slippageBps < 0 || slippageBps > 5_000) {
-    throw new Error("slippageBps exceeds maximum (5000 = 50%)");
-  }
-
-  const chainAddrs = ADDRESSES[chainId];
-  if (!chainAddrs?.uniswapV3) {
-    throw new Error(`chainId ${chainId} is not supported for Uniswap V3`);
-  }
-
   validateAddress(token0);
   validateAddress(token1);
 
-  const npmAddress = chainAddrs.uniswapV3.npm;
   const effectiveDeadline =
     deadline ?? BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_OFFSET;
-
   const amount0Min = applySlippage(amount0Desired, slippageBps);
   const amount1Min = applySlippage(amount1Desired, slippageBps);
 
@@ -79,7 +89,7 @@ export async function mintPosition(
   });
 
   const event = logs[0];
-  if (!event) throw new Error("IncreaseLiquidity event not found in receipt");
+  if (!event) throw new ReceiptEventNotFoundError("IncreaseLiquidity", hash);
 
   return {
     tokenId: event.args.tokenId,

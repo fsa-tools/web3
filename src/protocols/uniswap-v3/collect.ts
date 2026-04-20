@@ -1,28 +1,32 @@
 import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
-import { ADDRESSES } from "../../constants/addresses.js";
-import type { CollectParams, CollectResult } from "./types.js";
+import {
+  ProtocolNotSupportedError,
+  ReceiptEventNotFoundError,
+} from "../../errors.js";
+import type { ChainContext } from "../../context.js";
+import type { CollectOperationParams, CollectResult } from "./types.js";
 
 const MAX_UINT128 = 2n ** 128n - 1n;
 
 export async function collectFees(
-  params: CollectParams,
+  ctx: ChainContext,
+  params: CollectOperationParams,
 ): Promise<CollectResult> {
-  const {
-    walletClient,
-    publicClient,
-    chainId,
-    tokenId,
-    recipient,
-    gasOptions,
-  } = params;
-
-  const chainAddrs = ADDRESSES[chainId];
-  if (!chainAddrs?.uniswapV3) {
-    throw new Error(`chainId ${chainId} is not supported for Uniswap V3`);
+  if (!ctx.walletClient) {
+    throw new Error("collectFees requires walletClient in ChainContext");
   }
 
-  const npmAddress = chainAddrs.uniswapV3.npm;
+  const npmAddress = ctx.addresses.uniswapV3?.npm;
+  if (!npmAddress) {
+    throw new ProtocolNotSupportedError(
+      ctx.publicClient.chain?.id ?? 0,
+      "uniswapV3",
+    );
+  }
+
+  const { publicClient, walletClient } = ctx;
+  const { tokenId, recipient, gasOptions } = params;
 
   const hash = await walletClient.writeContract({
     address: npmAddress,
@@ -51,7 +55,7 @@ export async function collectFees(
   });
 
   const event = logs[0];
-  if (!event) throw new Error("Collect event not found in receipt");
+  if (!event) throw new ReceiptEventNotFoundError("Collect", hash);
 
   return {
     amount0: event.args.amount0,

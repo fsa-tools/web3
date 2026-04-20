@@ -1,37 +1,41 @@
 import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
-import { ADDRESSES } from "../../constants/addresses.js";
 import { applySlippage } from "../../math/slippage.js";
 import { withRetry } from "../../utils/retry.js";
-import type { DecreaseParams, DecreaseResult } from "./types.js";
+import {
+  ProtocolNotSupportedError,
+  SlippageExceededError,
+  ReceiptEventNotFoundError,
+} from "../../errors.js";
+import type { ChainContext } from "../../context.js";
+import type { DecreaseOperationParams, DecreaseResult } from "./types.js";
 
 const DEFAULT_DEADLINE_OFFSET = 1200n;
+const MAX_SLIPPAGE_BPS = 5_000;
 
 export async function decreaseLiquidity(
-  params: DecreaseParams,
+  ctx: ChainContext,
+  params: DecreaseOperationParams,
 ): Promise<DecreaseResult> {
-  const {
-    walletClient,
-    publicClient,
-    chainId,
-    tokenId,
-    liquidity,
-    slippageBps,
-    deadline,
-    recipient: _recipient,
-    gasOptions,
-  } = params;
-
-  if (slippageBps < 0 || slippageBps > 5_000) {
-    throw new Error("slippageBps exceeds maximum (5000 = 50%)");
+  if (!ctx.walletClient) {
+    throw new Error("decreaseLiquidity requires walletClient in ChainContext");
   }
 
-  const chainAddrs = ADDRESSES[chainId];
-  if (!chainAddrs?.uniswapV3) {
-    throw new Error(`chainId ${chainId} is not supported for Uniswap V3`);
+  if (params.slippageBps < 0 || params.slippageBps > MAX_SLIPPAGE_BPS) {
+    throw new SlippageExceededError(params.slippageBps, MAX_SLIPPAGE_BPS);
   }
 
-  const npmAddress = chainAddrs.uniswapV3.npm;
+  const npmAddress = ctx.addresses.uniswapV3?.npm;
+  if (!npmAddress) {
+    throw new ProtocolNotSupportedError(
+      ctx.publicClient.chain?.id ?? 0,
+      "uniswapV3",
+    );
+  }
+
+  const { publicClient, walletClient } = ctx;
+  const { tokenId, liquidity, slippageBps, deadline, gasOptions } = params;
+
   const effectiveDeadline =
     deadline ?? BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_OFFSET;
 
@@ -86,7 +90,7 @@ export async function decreaseLiquidity(
   });
 
   const event = logs[0];
-  if (!event) throw new Error("DecreaseLiquidity event not found in receipt");
+  if (!event) throw new ReceiptEventNotFoundError("DecreaseLiquidity", hash);
 
   return {
     amount0: event.args.amount0,
