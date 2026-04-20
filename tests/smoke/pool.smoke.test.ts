@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { createClients } from "../../src/utils/client.js";
-import { getPoolSlot0 } from "../../src/utils/pool.js";
-import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
+import { getCurrentPrice } from "../../src/utils/pool.js";
+import { SMOKE_CHAINS, loadChainContext } from "./_helpers.js";
 
 // Pool addresses canônicos em testnet (usar um pool Uniswap V3 ativo).
 const POOLS: Record<string, `0x${string}`> = {
@@ -10,22 +9,23 @@ const POOLS: Record<string, `0x${string}`> = {
   "base-sepolia": "0x0000000000000000000000000000000000000000",
 };
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
-  const env = loadChainEnv(cfg);
   const pool = POOLS[cfg.name];
-  const canRun =
-    env && pool && pool !== "0x0000000000000000000000000000000000000000";
+  const canRun = (() => {
+    const ctx = loadChainContext(cfg);
+    return ctx && pool && pool !== ZERO_ADDRESS;
+  })();
+
   describe.skipIf(!canRun)(`pool smoke — ${cfg.name}`, () => {
     if (!canRun) return;
 
-    it(`slot0 returns sqrtPriceX96 > 0`, async () => {
-      const { publicClient } = createClients({
-        chainId: cfg.chainId,
-        rpcUrl: env!.rpcUrl,
-      });
-      const slot0 = await getPoolSlot0({ publicClient, pool });
-      expect(slot0.sqrtPriceX96).toBeGreaterThan(0n);
-      expect(typeof slot0.tick).toBe("number");
+    it(`getCurrentPrice returns sqrtPriceX96 > 0 and tick`, async () => {
+      const ctx = loadChainContext(cfg)!;
+      const result = await getCurrentPrice(ctx, { poolAddress: pool! });
+      expect(result.sqrtPriceX96).toBeGreaterThan(0n);
+      expect(typeof result.tick).toBe("number");
     });
   });
 }

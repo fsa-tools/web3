@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { createChainContext } from "../../src/context.js";
 import { ensureAllowance, getBalance } from "../../src/utils/erc20.js";
 import { getTokenDecimals } from "../../src/utils/decimals.js";
 import {
@@ -8,8 +7,7 @@ import {
   collectFees,
   burnPosition,
 } from "../../src/protocols/uniswap-v3/index.js";
-import { ADDRESSES } from "../../src/constants/addresses.js";
-import { SMOKE_CHAINS, loadChainEnv } from "./_helpers.js";
+import { SMOKE_CHAINS, loadChainContext } from "./_helpers.js";
 
 const WETH_DEPOSIT_ABI = [
   {
@@ -21,39 +19,36 @@ const WETH_DEPOSIT_ABI = [
   },
 ] as const;
 
-for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
-  const TICK_LOWER = -60_000;
-  const TICK_UPPER = 60_000;
-  const SLIPPAGE_BPS = 500;
-  const DEADLINE_SECS = 600;
-  const WETH_MIN_EXPONENT = 3;
-  const TEST_TIMEOUT_MS = 180_000;
+const TICK_LOWER = -60_000;
+const TICK_UPPER = 60_000;
+const SLIPPAGE_BPS = 500;
+const DEADLINE_SECS = 600;
+const WETH_MIN_EXPONENT = 3;
+const TEST_TIMEOUT_MS = 180_000;
 
-  const env = loadChainEnv(cfg);
-  const chainAddrs = ADDRESSES[cfg.chainId];
-  const canRun =
-    env &&
-    cfg.protocols.uniswapV3Npm &&
-    cfg.faucetTokens.weth &&
-    cfg.faucetTokens.usdc &&
-    chainAddrs?.wethUsdcPool;
+for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
+  const canRun = (() => {
+    const ctx = loadChainContext(cfg);
+    return (
+      ctx &&
+      ctx.addresses.uniswapV3 &&
+      cfg.faucetTokens.weth &&
+      cfg.faucetTokens.usdc &&
+      ctx.addresses.wethUsdcPool
+    );
+  })();
 
   describe.skipIf(!canRun)(`uniswap-v3 smoke lifecycle — ${cfg.name}`, () => {
     if (!canRun) return;
-    const weth = cfg.faucetTokens.weth!;
-    const usdc = cfg.faucetTokens.usdc!;
 
     it(
       `full lifecycle: mint → decrease 50% → collect → burn`,
       async () => {
-        const ctx = createChainContext({
-          chainId: cfg.chainId,
-          rpcUrls: [env!.rpcUrl],
-          privateKey: env!.pk,
-          decimalsCache: new Map(),
-        });
+        const ctx = loadChainContext(cfg)!;
+        const weth = cfg.faucetTokens.weth!;
+        const usdc = cfg.faucetTokens.usdc!;
+        const npm = ctx.addresses.uniswapV3!.npm;
         const owner = ctx.walletClient!.account.address;
-        const npm = cfg.protocols.uniswapV3Npm!;
 
         const [wethDec, usdcDec] = await Promise.all([
           getTokenDecimals(ctx, { token: weth }),
@@ -62,11 +57,7 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         const wethMin = 10n ** BigInt(wethDec - WETH_MIN_EXPONENT);
         const usdcMin = 10n ** BigInt(usdcDec);
 
-        const wethBal = await getBalance({
-          publicClient: ctx.publicClient,
-          token: weth,
-          owner,
-        });
+        const wethBal = await getBalance(ctx, { token: weth, owner });
         if (wethBal < wethMin) {
           const wrapHash = await ctx.walletClient!.writeContract({
             address: weth,
@@ -78,8 +69,8 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
         }
 
         const [wethBalFinal, usdcBal] = await Promise.all([
-          getBalance({ publicClient: ctx.publicClient, token: weth, owner }),
-          getBalance({ publicClient: ctx.publicClient, token: usdc, owner }),
+          getBalance(ctx, { token: weth, owner }),
+          getBalance(ctx, { token: usdc, owner }),
         ]);
         if (wethBalFinal < wethMin || usdcBal < usdcMin) {
           console.warn(
@@ -88,16 +79,12 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
           return;
         }
 
-        await ensureAllowance({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
+        await ensureAllowance(ctx, {
           token: weth,
           spender: npm,
           amount: wethMin,
         });
-        await ensureAllowance({
-          publicClient: ctx.publicClient,
-          walletClient: ctx.walletClient!,
+        await ensureAllowance(ctx, {
           token: usdc,
           spender: npm,
           amount: usdcMin,
