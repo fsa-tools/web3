@@ -16,14 +16,112 @@ Requer `.npmrc` apontando pro Verdaccio interno:
 
 ## Uso
 
-```ts
-import { createClients, ensureAllowance, uniswapV3 } from "@fsa/web3";
+```typescript
+import { createChainContext } from "@fsa/web3/context";
+import { mintPosition } from "@fsa/web3/uniswap-v3";
+import type { Hex } from "viem";
+
+const ctx = createChainContext({
+  chainId: 8453,
+  rpcUrls: [process.env.BASE_RPC!],
+  privateKey: process.env.PK as Hex,
+});
+
+await mintPosition(ctx, {
+  token0: "0x...",
+  token1: "0x...",
+  fee: 500,
+  tickLower: -60_000,
+  tickUpper: 60_000,
+  amount0Desired: 1000000n,
+  amount1Desired: 1000000000000000n,
+  slippageBps: 50,
+});
+```
+
+## Migrating from v1.x to v2.0
+
+In v1.x, each function received `publicClient`, `walletClient`, and `chainId` directly. In v2.0, create a `ChainContext` once and pass it to all functions.
+
+### Before (v1.x)
+
+```typescript
+import { createClients } from "@fsa/web3/utils";
+import { mintPosition } from "@fsa/web3/uniswap-v3";
 
 const { publicClient, walletClient } = createClients({
   chainId: 8453,
-  rpcUrl: process.env.BASE_RPC!,
-  privateKey: process.env.PK as `0x${string}`,
+  rpcUrl: process.env.RPC_URL!,
+  privateKey: process.env.PRIVATE_KEY as Hex,
 });
+
+await mintPosition({
+  publicClient,
+  walletClient,
+  chainId: 8453,
+  token0: "0x...",
+  token1: "0x...",
+  fee: 500,
+  // ...
+});
+```
+
+### After (v2.0)
+
+```typescript
+import { createChainContext } from "@fsa/web3/context";
+import { mintPosition } from "@fsa/web3/uniswap-v3";
+
+const ctx = createChainContext({
+  chainId: 8453,
+  rpcUrls: [process.env.RPC_URL!],  // array required — fallback always active
+  privateKey: process.env.PRIVATE_KEY as Hex,
+});
+
+await mintPosition(ctx, {
+  token0: "0x...",
+  token1: "0x...",
+  fee: 500,
+  // no publicClient, walletClient, chainId — they come from ctx
+});
+```
+
+### Migration table
+
+| v1.x | v2.0 |
+|------|-------|
+| `createClients(params)` from `@fsa/web3/utils` | `createChainContext(params)` from `@fsa/web3/context` |
+| `rpcUrl: string` | `rpcUrls: string[]` (fallback always active) |
+| `MintParams` | `MintOperationParams` |
+| `SupplyParams` | `SupplyOperationParams` |
+| `WithdrawParams` | `WithdrawOperationParams` |
+| `DecreaseParams` | `DecreaseOperationParams` |
+| `BurnParams` | `BurnOperationParams` |
+| `CollectParams` | `CollectOperationParams` |
+| `getTokenDecimals({ publicClient, token })` | `getTokenDecimals(ctx, { token })` |
+| `ensureAllowance({ publicClient, walletClient, ... })` | `ensureAllowance(ctx, { token, spender, amount })` |
+| `_resetCache()` (decimals singleton) | `ctx.decimalsCache = new Map()` (injectable DI) |
+| `throw new Error("chainId X not supported")` | `throw new ChainNotSupportedError(chainId)` |
+
+### Typed errors
+
+```typescript
+import {
+  ChainNotSupportedError,
+  ProtocolNotSupportedError,
+  SlippageExceededError,
+  ReceiptEventNotFoundError,
+} from "@fsa/web3/errors";
+
+try {
+  await mintPosition(ctx, params);
+} catch (err) {
+  if (err instanceof SlippageExceededError) {
+    console.log(`Slippage ${err.bps}bps > max ${err.max}bps`);
+  } else if (err instanceof ReceiptEventNotFoundError) {
+    console.log(`Event ${err.eventName} missing in tx ${err.txHash}`);
+  }
+}
 ```
 
 ## Scripts
