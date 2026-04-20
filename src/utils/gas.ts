@@ -1,8 +1,8 @@
-import type { Address, Hex, PublicClient } from "viem";
+import type { Address, Hex } from "viem";
 import { POOL_ABI } from "../abis/pool.js";
+import type { ChainContext } from "../context.js";
 
 export type EstimateGasParams = {
-  publicClient: PublicClient;
   to: Address;
   data: Hex;
   value?: bigint;
@@ -23,13 +23,11 @@ export type GasOptions = {
 };
 
 export type GetEthPriceParams = {
-  publicClient: PublicClient;
   wethUsdcPoolAddress: Address;
   poolAbi?: typeof POOL_ABI;
 };
 
 export type GasGuardOptions = {
-  publicClient: PublicClient;
   expectedGasUnits: bigint;
   ethPriceUsd: number;
   gasCostThresholdUsd: number;
@@ -42,7 +40,6 @@ export type GasGuardOptionsWithRetry = GasGuardOptions & {
 };
 
 export type EstimateDryRunCostParams = {
-  publicClient: PublicClient;
   expectedGasUnits: bigint;
   ethPriceUsd: number;
 };
@@ -57,9 +54,11 @@ const DEFAULT_FALLBACK_GAS = 500000n;
 const WEI_PER_ETH = 1e18;
 
 export async function estimateGas(
+  ctx: ChainContext,
   params: EstimateGasParams,
 ): Promise<GasEstimate> {
-  const { publicClient, fallbackGasUnits = DEFAULT_FALLBACK_GAS } = params;
+  const { publicClient } = ctx;
+  const { fallbackGasUnits = DEFAULT_FALLBACK_GAS } = params;
   let gasUnits: bigint;
   try {
     gasUnits = await publicClient.estimateGas({
@@ -121,11 +120,12 @@ function isTimeoutExceeded(
 }
 
 export async function withGasGuard<T>(
+  ctx: ChainContext,
   fn: () => Promise<T>,
   options: GasGuardOptions | GasGuardOptionsWithRetry,
 ): Promise<T> {
-  const { publicClient, expectedGasUnits, ethPriceUsd, gasCostThresholdUsd } =
-    options;
+  const { publicClient } = ctx;
+  const { expectedGasUnits, ethPriceUsd, gasCostThresholdUsd } = options;
   const hasRetry = "maxRetries" in options;
   const maxRetries = hasRetry ? options.maxRetries : 0;
   const retryIntervalMs = hasRetry ? options.retryIntervalMs : 0;
@@ -171,22 +171,24 @@ export async function withGasGuard<T>(
 }
 
 export async function estimateDryRunCost(
+  ctx: ChainContext,
   params: EstimateDryRunCostParams,
 ): Promise<DryRunCostEstimate> {
-  const { publicClient, expectedGasUnits, ethPriceUsd } = params;
-  const feeData = await publicClient.estimateFeesPerGas();
+  const feeData = await ctx.publicClient.estimateFeesPerGas();
   const baseFeeWei = feeData.maxFeePerGas ?? 0n;
   const baseFeeGwei = Number(baseFeeWei) / 1e9;
   const costUsd =
-    (Number(expectedGasUnits * baseFeeWei) / WEI_PER_ETH) * ethPriceUsd;
-  return { costUsd, baseFeeGwei, ethPriceUsd };
+    (Number(params.expectedGasUnits * baseFeeWei) / WEI_PER_ETH) *
+    params.ethPriceUsd;
+  return { costUsd, baseFeeGwei, ethPriceUsd: params.ethPriceUsd };
 }
 
 export async function getEthPriceUsd(
+  ctx: ChainContext,
   params: GetEthPriceParams,
 ): Promise<number> {
   const abi = params.poolAbi ?? POOL_ABI;
-  const result = (await params.publicClient.readContract({
+  const result = (await ctx.publicClient.readContract({
     address: params.wethUsdcPoolAddress,
     abi,
     functionName: "slot0",
@@ -194,7 +196,6 @@ export async function getEthPriceUsd(
   const sqrtPriceX96 = result[0];
   const Q96 = 2n ** 96n;
   const price = Number(sqrtPriceX96 * sqrtPriceX96) / Number(Q96 * Q96);
-  // WETH/USDC pool: price = USDC per WETH (adjust for decimals: USDC=6, WETH=18)
-  const DECIMALS_ADJUSTMENT = 1e12; // 10^(18-6)
+  const DECIMALS_ADJUSTMENT = 1e12;
   return price * DECIMALS_ADJUSTMENT;
 }
