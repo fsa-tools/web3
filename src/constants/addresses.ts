@@ -27,7 +27,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     },
     uniswapV3: {
       npm: "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1",
-      factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      factory: "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
     },
   },
   1: {

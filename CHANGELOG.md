@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] — 2026-05-14
+
+### Fixed
+
+- Endereço do Uniswap V3 Factory para Base (chainId 8453) corrigido: era `0x1F98431c8aD98523631AE4a59f267346ea31F984` (Ethereum mainnet), correto é `0x33128a8fC17869897dcE68Ed026d694621f6FDfD`
+
 ## [2.0.0] — 2026-04-20
 
 ### Breaking Changes
