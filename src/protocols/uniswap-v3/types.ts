@@ -62,3 +62,20 @@ export type BurnResult = {
   txHash: Hash;
   gasUsed: bigint;
 };
+
+export type SwapOperationParams = {
+  tokenIn: Address;
+  tokenOut: Address;
+  fee: number;
+  amountIn: bigint;
+  /** sqrtPriceX96 atual do pool — usado para derivar amountOutMinimum. */
+  sqrtPriceX96: bigint;
+  slippageBps: number;
+  gasOptions?: GasOptions;
+};
+
+export type SwapResult = {
+  amountOut: bigint;
+  txHash: Hash;
+  gasUsed: bigint;
+};
