@@ -34,14 +34,14 @@ export function computeDepositRatio(params: ComputeDepositRatioParams): number {
   const upper = Number(sqrtUpper) / Number(Q96);
   const current = Number(sqrtPriceX96) / Number(Q96);
 
-  // Locked amounts per unit of liquidity L:
-  // x = (current - lower) / sqrt_current
-  // y = (upper - current) * sqrt_current
-  // In value terms (normalized to same denomination):
-  // value0 (in units of token1) = x * price = (current - lower) * current
-  // value1 = y = (upper - current) * sqrt_current
-  const value0 = (current - lower) * current;
-  const value1 = (upper - current) * current;
+  // Para liquidez L no range, com sqrt-preços lower/current/upper:
+  //   amount0 = L * (upper - current) / (current * upper)
+  //   amount1 = L * (current - lower)
+  // value0 = amount0 * preço = amount0 * current^2 = L * current * (upper - current) / upper
+  // value1 = amount1 = L * (current - lower)
+  // L cancela na fração f0 abaixo.
+  const value0 = (current * (upper - current)) / upper;
+  const value1 = current - lower;
 
   return value0 / (value0 + value1);
 }
