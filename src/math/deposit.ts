@@ -38,10 +38,10 @@ export function computeDepositRatio(params: ComputeDepositRatioParams): number {
   // x = (current - lower) / sqrt_current
   // y = (upper - current) * sqrt_current
   // In value terms (normalized to same denomination):
-  // value0 (in units of token1) = x * price = (current - lower) * sqrt_current
+  // value0 (in units of token1) = x * price = (current - lower) * current
   // value1 = y = (upper - current) * sqrt_current
   const value0 = (current - lower) * current;
-  const value1 = upper - current;
+  const value1 = (upper - current) * current;
 
   return value0 / (value0 + value1);
 }
