@@ -34,14 +34,14 @@ describe("computeDepositRatio", () => {
     expect(f0).toBe(0);
   });
 
-  it("range assimétrico para cima: mais valor em token1 (f0 < 0.5)", () => {
+  it("range assimétrico (preço perto do limite inferior): mais valor em token0 (f0 > 0.5)", () => {
     const f0 = computeDepositRatio({
       sqrtPriceX96: getSqrtRatioAtTick(0),
       tickLower: -200,
       tickUpper: 2000,
     });
-    expect(f0).toBeGreaterThan(0);
-    expect(f0).toBeLessThan(0.5);
+    expect(f0).toBeGreaterThan(0.5);
+    expect(f0).toBeLessThan(1);
   });
 
   it("rejeita tickLower >= tickUpper", () => {
