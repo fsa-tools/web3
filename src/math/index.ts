@@ -16,3 +16,5 @@ export {
 } from "./ticks.js";
 export { getLockedAmounts } from "./liquidity.js";
 export type { GetLockedAmountsParams } from "./liquidity.js";
+export { computeDepositRatio } from "./deposit.js";
+export type { ComputeDepositRatioParams } from "./deposit.js";
