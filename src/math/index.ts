@@ -18,3 +18,5 @@ export { getLockedAmounts } from "./liquidity.js";
 export type { GetLockedAmountsParams } from "./liquidity.js";
 export { computeDepositRatio } from "./deposit.js";
 export type { ComputeDepositRatioParams } from "./deposit.js";
+export { spotAmountOut } from "./swap.js";
+export type { SpotAmountOutParams } from "./swap.js";
