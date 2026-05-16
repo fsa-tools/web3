@@ -3,6 +3,7 @@ import type { Address } from "viem";
 export type ProtocolAddresses = {
   npm: Address;
   factory?: Address;
+  swapRouter?: Address;
 };
 
 export type AaveAddresses = {
@@ -28,6 +29,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1",
       factory: "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+      swapRouter: "0x2626664c2603336E57B271c5C0b26F421741e481",
     },
   },
   1: {
@@ -36,6 +38,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      swapRouter: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     },
     aave: {
       pool: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
@@ -47,6 +50,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      swapRouter: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     },
     aave: {
       pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
@@ -58,6 +62,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      swapRouter: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     },
     aave: {
       pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
@@ -69,6 +74,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      swapRouter: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     },
     aave: {
       pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
@@ -80,6 +86,7 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     uniswapV3: {
       npm: "0x1238536071E1c677A632429e3655c799b22cDA52",
       factory: "0x0227628f3F023bb0B980b67D528571c95c6DaC1c",
+      swapRouter: "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E",
     },
     aave: {
       pool: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
