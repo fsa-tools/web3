@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0] — 2026-05-16
+
+### Added
+
+- `computeDepositRatio` (math): fração de valor token0 para depósito Uniswap V3 dado o range e o preço atual
+- `spotAmountOut` (math): quote spot single-hop sem price impact
+- `swapExactInputSingle` (uniswap-v3): wrapper do SwapRouter02 (`exactInputSingle`) com `amountOutMinimum` derivado de slippage
+- `swapRouter` por chain em `ChainAddresses` + `SWAP_ROUTER_ABI`
+
 ## [2.0.1] — 2026-05-14
 
 ### Fixed
