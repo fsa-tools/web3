@@ -1,6 +1,7 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
 import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
+import { ensureAllowance } from "../../utils/erc20.js";
 import { SlippageExceededError } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
 import type { MintOperationParams, PositionResult } from "./types.js";
@@ -25,6 +26,17 @@ export async function mintPosition(
   validateAddress(params.npmAddress);
   validateAddress(params.token0);
   validateAddress(params.token1);
+
+  await ensureAllowance(ctx, {
+    token: params.token0,
+    spender: params.npmAddress,
+    amount: params.amount0Desired,
+  });
+  await ensureAllowance(ctx, {
+    token: params.token1,
+    spender: params.npmAddress,
+    amount: params.amount1Desired,
+  });
 
   const { publicClient, walletClient } = ctx;
   const deadline =

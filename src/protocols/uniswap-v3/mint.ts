@@ -2,6 +2,7 @@ import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
 import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
+import { ensureAllowance } from "../../utils/erc20.js";
 import {
   ProtocolNotSupportedError,
   SlippageExceededError,
@@ -49,6 +50,17 @@ export async function mintPosition(
 
   validateAddress(token0);
   validateAddress(token1);
+
+  await ensureAllowance(ctx, {
+    token: token0,
+    spender: npmAddress,
+    amount: amount0Desired,
+  });
+  await ensureAllowance(ctx, {
+    token: token1,
+    spender: npmAddress,
+    amount: amount1Desired,
+  });
 
   const effectiveDeadline =
     deadline ?? BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_OFFSET;

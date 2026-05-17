@@ -9,6 +9,14 @@
 - `swapExactInputSingle` (uniswap-v3): wrapper do SwapRouter02 (`exactInputSingle`) com `amountOutMinimum` derivado de slippage
 - `swapRouter` por chain em `ChainAddresses` + `SWAP_ROUTER_ABI`
 
+## [2.1.0] — 2026-05-14
+
+### Added
+
+- `mintPosition` (uniswap-v3 e aerodrome): `ensureAllowance` de token0 e token1 embutido antes do mint — corrige revert `STF` por allowance ausente
+
+> Nota: publicado no Verdaccio em 2026-05-14, mas o código-fonte só foi commitado em 2026-05-16 (entrada retroativa).
+
 ## [2.0.1] — 2026-05-14
 
 ### Fixed
