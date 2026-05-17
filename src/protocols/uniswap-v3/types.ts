@@ -68,8 +68,6 @@ export type SwapOperationParams = {
   tokenOut: Address;
   fee: number;
   amountIn: bigint;
-  /** sqrtPriceX96 atual do pool — usado para derivar amountOutMinimum. */
-  sqrtPriceX96: bigint;
   slippageBps: number;
   gasOptions?: GasOptions;
 };
@@ -78,4 +76,20 @@ export type SwapResult = {
   amountOut: bigint;
   txHash: Hash;
   gasUsed: bigint;
+};
+
+export type QuoteOperationParams = {
+  tokenIn: Address;
+  tokenOut: Address;
+  fee: number;
+  amountIn: bigint;
+};
+
+export type QuoteResult = {
+  /** Output efetivo do swap — já descontados fee do pool e price impact. */
+  amountOut: bigint;
+  /** sqrtPriceX96 do pool após o swap simulado. */
+  sqrtPriceX96After: bigint;
+  initializedTicksCrossed: number;
+  gasEstimate: bigint;
 };

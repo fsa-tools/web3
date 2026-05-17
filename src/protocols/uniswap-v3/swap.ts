@@ -1,6 +1,5 @@
 import { SWAP_ROUTER_ABI } from "../../abis/swap-router.js";
 import { applySlippage } from "../../math/slippage.js";
-import { spotAmountOut } from "../../math/swap.js";
 import { validateAddress } from "../../utils/address.js";
 import { ensureAllowance, getBalance } from "../../utils/erc20.js";
 import {
@@ -8,6 +7,7 @@ import {
   SlippageExceededError,
 } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
+import { quoteExactInputSingle } from "./quote.js";
 import type { SwapOperationParams, SwapResult } from "./types.js";
 
 const MAX_SLIPPAGE_BPS = 5_000;
@@ -34,15 +34,7 @@ export async function swapExactInputSingle(
     );
   }
 
-  const {
-    tokenIn,
-    tokenOut,
-    fee,
-    amountIn,
-    sqrtPriceX96,
-    slippageBps,
-    gasOptions,
-  } = params;
+  const { tokenIn, tokenOut, fee, amountIn, slippageBps, gasOptions } = params;
   validateAddress(tokenIn);
   validateAddress(tokenOut);
 
@@ -55,8 +47,14 @@ export async function swapExactInputSingle(
     amount: amountIn,
   });
 
-  const zeroForOne = tokenIn.toLowerCase() < tokenOut.toLowerCase();
-  const expectedOut = spotAmountOut({ sqrtPriceX96, amountIn, zeroForOne });
+  // amountOutMinimum sobre a cotação real do QuoterV2 — já inclui fee do pool
+  // e price impact. O haircut de slippage cobre só o drift bloco-a-bloco.
+  const { amountOut: expectedOut } = await quoteExactInputSingle(ctx, {
+    tokenIn,
+    tokenOut,
+    fee,
+    amountIn,
+  });
   const amountOutMinimum = applySlippage(expectedOut, slippageBps);
 
   const balanceBefore = await getBalance(ctx, { token: tokenOut, owner });

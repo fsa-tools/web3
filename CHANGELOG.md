@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0] — 2026-05-16
+
+### Added
+
+- `quoteExactInputSingle` (uniswap-v3): cotação real de swap single-hop via QuoterV2 — simula o swap on-chain e retorna `amountOut` já com fee do pool e price impact descontados. Retorna também `sqrtPriceX96After` e `initializedTicksCrossed`.
+- `QUOTER_V2_ABI` + endereço `quoter` por chain em `ProtocolAddresses` (Base, Ethereum, Optimism, Arbitrum, Polygon).
+
+### Changed
+
+- **BREAKING** `swapExactInputSingle`: `amountOutMinimum` agora deriva da cotação do QuoterV2 (com fee + price impact), não mais de `spotAmountOut` (estimativa marginal sem impacto). Em pools de baixa liquidez o spot estourava a tolerância de slippage e o swap revertia `Too little received`.
+- **BREAKING** `SwapOperationParams`: campo `sqrtPriceX96` removido — não é mais necessário, a cotação vem do QuoterV2.
+
 ## [2.2.0] — 2026-05-16
 
 ### Added

@@ -1,26 +1,58 @@
 {
   "name": "@fsa/web3",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Shared Web3 utilities: viem clients, ERC20 helpers, Uniswap V3 / Aerodrome / Aave V3 protocol wrappers",
   "repository": {
     "type": "git",
     "url": "git@gitlab.com:fsa-portfolio/fsa-web3.git"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
-    "./aerodrome": { "import": "./dist/src/protocols/aerodrome/index.js", "types": "./dist/src/protocols/aerodrome/index.d.ts" },
-    "./uniswap-v3": { "import": "./dist/src/protocols/uniswap-v3/index.js", "types": "./dist/src/protocols/uniswap-v3/index.d.ts" },
-    "./aave": { "import": "./dist/src/protocols/aave/index.js", "types": "./dist/src/protocols/aave/index.d.ts" },
-    "./utils": { "import": "./dist/src/utils/index.js", "types": "./dist/src/utils/index.d.ts" },
-    "./math": { "import": "./dist/src/math/index.js", "types": "./dist/src/math/index.d.ts" },
-    "./abis": { "import": "./dist/src/abis/index.js", "types": "./dist/src/abis/index.d.ts" },
-    "./constants": { "import": "./dist/src/constants/index.js", "types": "./dist/src/constants/index.d.ts" },
-    "./errors": { "import": "./dist/src/errors.js", "types": "./dist/src/errors.d.ts" },
-    "./context": { "import": "./dist/src/context.js", "types": "./dist/src/context.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./aerodrome": {
+      "import": "./dist/src/protocols/aerodrome/index.js",
+      "types": "./dist/src/protocols/aerodrome/index.d.ts"
+    },
+    "./uniswap-v3": {
+      "import": "./dist/src/protocols/uniswap-v3/index.js",
+      "types": "./dist/src/protocols/uniswap-v3/index.d.ts"
+    },
+    "./aave": {
+      "import": "./dist/src/protocols/aave/index.js",
+      "types": "./dist/src/protocols/aave/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/src/utils/index.js",
+      "types": "./dist/src/utils/index.d.ts"
+    },
+    "./math": {
+      "import": "./dist/src/math/index.js",
+      "types": "./dist/src/math/index.d.ts"
+    },
+    "./abis": {
+      "import": "./dist/src/abis/index.js",
+      "types": "./dist/src/abis/index.d.ts"
+    },
+    "./constants": {
+      "import": "./dist/src/constants/index.js",
+      "types": "./dist/src/constants/index.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/src/errors.js",
+      "types": "./dist/src/errors.d.ts"
+    },
+    "./context": {
+      "import": "./dist/src/context.js",
+      "types": "./dist/src/context.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc",

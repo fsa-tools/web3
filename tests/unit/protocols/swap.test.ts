@@ -4,6 +4,7 @@ import { swapExactInputSingle } from "../../../src/protocols/uniswap-v3/swap.js"
 import type { ChainContext } from "../../../src/context.js";
 
 const SWAP_ROUTER: Address = "0x2626664c2603336E57B271c5C0b26F421741e481";
+const QUOTER: Address = "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a";
 const TOKEN_IN: Address = "0x4200000000000000000000000000000000000006";
 const TOKEN_OUT: Address = "0x9999999999999999999999999999999999999999";
 const OWNER: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
@@ -14,6 +15,9 @@ type Mock = {
   calls: Array<{ functionName: string; args: readonly unknown[] }>;
 };
 
+/** amountOut cotado pelo QuoterV2 — base do amountOutMinimum. */
+const QUOTED_OUT = 2_000n;
+
 function buildMockContext(): Mock {
   const calls: Mock["calls"] = [];
   let balanceOfCallCount = 0;
@@ -22,6 +26,10 @@ function buildMockContext(): Mock {
     chain: { id: 8453 },
     readContract: vi.fn(async (p: { functionName: string }) => {
       if (p.functionName === "allowance") return 0n;
+      if (p.functionName === "quoteExactInputSingle") {
+        // [amountOut, sqrtPriceX96After, initializedTicksCrossed, gasEstimate]
+        return [QUOTED_OUT, Q96, 1, 90_000n];
+      }
       if (p.functionName === "balanceOf") {
         balanceOfCallCount += 1;
         // 1ª leitura (antes do swap) = 0; 2ª (depois) = 500
@@ -50,7 +58,11 @@ function buildMockContext(): Mock {
     walletClient,
     addresses: {
       weth: TOKEN_IN,
-      uniswapV3: { npm: "0x0" as Address, swapRouter: SWAP_ROUTER },
+      uniswapV3: {
+        npm: "0x0" as Address,
+        swapRouter: SWAP_ROUTER,
+        quoter: QUOTER,
+      },
     },
   } as unknown as ChainContext;
 
@@ -66,7 +78,6 @@ describe("swapExactInputSingle", () => {
       tokenOut: TOKEN_OUT,
       fee: 500,
       amountIn: 1_000n,
-      sqrtPriceX96: Q96,
       slippageBps: 100,
     });
 
@@ -79,6 +90,23 @@ describe("swapExactInputSingle", () => {
     );
     expect(approveIdx).toBeGreaterThan(-1);
     expect(swapIdx).toBeGreaterThan(approveIdx);
+  });
+
+  it("deriva amountOutMinimum da cotação do QuoterV2 com haircut de slippage", async () => {
+    const { ctx, calls } = buildMockContext();
+
+    await swapExactInputSingle(ctx, {
+      tokenIn: TOKEN_IN,
+      tokenOut: TOKEN_OUT,
+      fee: 500,
+      amountIn: 1_000n,
+      slippageBps: 100,
+    });
+
+    const swapCall = calls.find((c) => c.functionName === "exactInputSingle");
+    const swapArgs = swapCall?.args[0] as { amountOutMinimum: bigint };
+    // applySlippage(2000, 100bps) = 2000 * 9900 / 10000 = 1980
+    expect(swapArgs.amountOutMinimum).toBe(1_980n);
   });
 
   it("falha quando a chain não tem swapRouter configurado", async () => {
@@ -94,7 +122,6 @@ describe("swapExactInputSingle", () => {
         tokenOut: TOKEN_OUT,
         fee: 500,
         amountIn: 1_000n,
-        sqrtPriceX96: Q96,
         slippageBps: 100,
       }),
     ).rejects.toThrow();
