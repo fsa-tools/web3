@@ -57,6 +57,8 @@ export async function mintPosition(
     recipient: walletClient.account.address,
     deadline: effectiveDeadline,
   });
+  if (txs.length === 0)
+    throw new Error("planMint returned empty transaction list");
   const mintTx = txs[txs.length - 1]!;
 
   const { txHash, receipt } = await sendTxRequest(
