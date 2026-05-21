@@ -63,6 +63,7 @@ describe("uniswap-v3 exit ops — plan + send", () => {
     } catch {
       // ignore parse
     }
+    expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe(NPM);
     expect(
       decodeFunctionData({ abi: NPM_ABI, data: sent[0]!.data }).functionName,
