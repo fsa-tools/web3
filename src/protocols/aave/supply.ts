@@ -1,9 +1,8 @@
-import { AAVE_POOL_ABI } from "../../abis/aave-pool.js";
+import { sendTxRequest } from "../../tx/send.js";
 import type { ChainContext } from "../../context.js";
 import { ProtocolNotSupportedError } from "../../errors.js";
+import { planSupply } from "./plan.js";
 import type { SupplyOperationParams, SupplyResult } from "./types.js";
-
-const REFERRAL_CODE = 0;
 
 export async function supply(
   ctx: ChainContext,
@@ -18,19 +17,14 @@ export async function supply(
       "aave",
     );
   }
-
-  const { publicClient, walletClient } = ctx;
   const poolAddress = ctx.addresses.aave.pool;
-  const recipient = params.onBehalfOf ?? walletClient.account.address;
+  const onBehalfOf = params.onBehalfOf ?? ctx.walletClient.account.address;
 
-  const hash = await walletClient.writeContract({
-    address: poolAddress,
-    abi: AAVE_POOL_ABI,
-    functionName: "supply",
-    args: [params.asset, params.amount, recipient, REFERRAL_CODE],
-  });
+  // planSupply retorna [approve, supply]. A op envia só a supply (approve é
+  // responsabilidade do caller — comportamento preservado da v3.0.0).
+  const txs = planSupply({ ...params, poolAddress, onBehalfOf });
+  const supplyTx = txs[txs.length - 1]!;
+  const { txHash } = await sendTxRequest(ctx, supplyTx);
 
-  await publicClient.waitForTransactionReceipt({ hash, confirmations: 2 });
-
-  return { txHash: hash };
+  return { txHash };
 }
