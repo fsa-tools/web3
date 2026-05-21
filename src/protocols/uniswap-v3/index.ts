@@ -19,3 +19,15 @@ export type {
   QuoteResult,
   GasOptions,
 } from "./types.js";
+export {
+  planMint,
+  planDecreaseLiquidity,
+  planCollectFees,
+  planBurnPosition,
+} from "./plan.js";
+export type {
+  PlanMintParams,
+  PlanDecreaseParams,
+  PlanCollectParams,
+  PlanBurnParams,
+} from "./plan.js";

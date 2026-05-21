@@ -66,7 +66,6 @@ export async function decreaseLiquidity(
   const [decreaseTx] = planDecreaseLiquidity({
     tokenId,
     liquidity,
-    slippageBps,
     deadline: effectiveDeadline,
     amount0Min,
     amount1Min,

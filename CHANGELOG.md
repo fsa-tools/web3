@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1.0 — 2026-05-21
+
+### Added
+- `TxRequest` type + `tx/` module: descritor de transação preparada-mas-não-enviada.
+- Path `encode/plan`: `planMint`/`planDecreaseLiquidity`/`planCollectFees`/`planBurnPosition`
+  (uniswap-v3) e `planSupply`/`planWithdraw` (aave) — devolvem `TxRequest[]` sem enviar.
+- `sendTxRequest` — o lado `send` do split `plan + send`.
+
+### Changed
+- Ops uniswap-v3 (`mint`/`decrease`/`collect`/`burn`) e aave (`supply`/`withdraw`)
+  passam a montar a calldata da operação principal via os `plan*` (split `plan + send`).
+  Comportamento de execução preservado; aerodrome e `swapExactInputSingle` não tocados.
+
 ## [3.0.0] — 2026-05-16
 
 ### Added
