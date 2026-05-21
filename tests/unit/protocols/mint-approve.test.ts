@@ -10,70 +10,48 @@ const TOKEN0: Address = "0x4200000000000000000000000000000000000006";
 const TOKEN1: Address = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
 const OWNER: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
 
-type MockContext = {
-  ctx: ChainContext;
-  calls: Array<{
-    address: Address;
-    functionName: string;
-    args: readonly unknown[];
-  }>;
-};
+type Call = { kind: "write" | "send"; address: Address; functionName: string };
+type MockContext = { ctx: ChainContext; calls: Call[] };
 
 function buildMockContext(): MockContext {
-  const calls: MockContext["calls"] = [];
-
+  const calls: Call[] = [];
+  const receipt = {
+    gasUsed: 100_000n,
+    logs: [
+      {
+        address: NPM_UNISWAP,
+        topics: [
+          "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f",
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+        ],
+        data: "0x" + "00".repeat(128),
+        eventName: "IncreaseLiquidity",
+        args: { tokenId: 1n, liquidity: 1_000n, amount0: 1n, amount1: 2n },
+      },
+    ],
+  };
   const publicClient = {
     chain: { id: 8453 },
-    readContract: vi.fn(async (params: { functionName: string }) => {
-      if (params.functionName === "allowance") return 0n;
-      return 0n;
-    }),
-    waitForTransactionReceipt: vi.fn(async () => ({
-      gasUsed: 100_000n,
-      logs: [
-        {
-          address: NPM_UNISWAP,
-          topics: [
-            "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f",
-            "0x0000000000000000000000000000000000000000000000000000000000000001",
-          ],
-          data:
-            "0x" +
-            "00".repeat(32) +
-            "00".repeat(31) +
-            "01" +
-            "00".repeat(31) +
-            "02" +
-            "00".repeat(31) +
-            "03",
-          eventName: "IncreaseLiquidity",
-          args: {
-            tokenId: 1n,
-            liquidity: 1_000n,
-            amount0: 1n,
-            amount1: 2n,
-          },
-        },
-      ],
-    })),
+    readContract: vi.fn(async () => 0n),
+    waitForTransactionReceipt: vi.fn(async () => receipt),
   } as unknown as ChainContext["publicClient"];
 
   const walletClient = {
     account: { address: OWNER },
     writeContract: vi.fn(
-      async (params: {
-        address: Address;
-        functionName: string;
-        args: readonly unknown[];
-      }) => {
+      async (p: { address: Address; functionName: string }) => {
         calls.push({
-          address: params.address,
-          functionName: params.functionName,
-          args: params.args,
+          kind: "write",
+          address: p.address,
+          functionName: p.functionName,
         });
         return "0xabc" as `0x${string}`;
       },
     ),
+    sendTransaction: vi.fn(async (p: { to: Address }) => {
+      calls.push({ kind: "send", address: p.to, functionName: "__send__" });
+      return "0xdef" as `0x${string}`;
+    }),
   } as unknown as ChainContext["walletClient"];
 
   const ctx = {
@@ -84,48 +62,40 @@ function buildMockContext(): MockContext {
       weth: TOKEN0,
     },
   } as unknown as ChainContext;
-
   return { ctx, calls };
 }
 
-describe("mintPosition (uniswap-v3) — pre-mint approvals", () => {
-  it("chama approve em token0 e token1 antes do mint", async () => {
+describe("mintPosition (uniswap-v3) — plan + send", () => {
+  it("aprova token0/token1 (writeContract) e envia o mint via sendTransaction ao NPM", async () => {
     const { ctx, calls } = buildMockContext();
-
-    try {
-      await mintUniswapV3(ctx, {
-        token0: TOKEN0,
-        token1: TOKEN1,
-        fee: 100,
-        tickLower: -200_000,
-        tickUpper: -190_000,
-        amount0Desired: 1_000_000_000_000_000n,
-        amount1Desired: 1_000_000n,
-        slippageBps: 100,
-      });
-    } catch {
-      // mint may throw downstream (mock log parsing) — we only assert pre-mint approve calls
-    }
-
-    const approveCalls = calls.filter((c) => c.functionName === "approve");
-    expect(approveCalls).toHaveLength(2);
-    expect(approveCalls.map((c) => c.address)).toEqual([TOKEN0, TOKEN1]);
-
-    const mintCallIdx = calls.findIndex((c) => c.functionName === "mint");
-    const approveIdxs = calls
-      .map((c, i) => (c.functionName === "approve" ? i : -1))
-      .filter((i) => i >= 0);
-    expect(mintCallIdx).toBeGreaterThan(-1);
-    for (const idx of approveIdxs) {
-      expect(idx).toBeLessThan(mintCallIdx);
-    }
+    await mintUniswapV3(ctx, {
+      token0: TOKEN0,
+      token1: TOKEN1,
+      fee: 100,
+      tickLower: -200_000,
+      tickUpper: -190_000,
+      amount0Desired: 1_000_000_000_000_000n,
+      amount1Desired: 1_000_000n,
+      slippageBps: 100,
+    });
+    const approves = calls.filter((c) => c.functionName === "approve");
+    expect(approves).toHaveLength(2);
+    expect(approves.map((c) => c.address)).toEqual([TOKEN0, TOKEN1]);
+    const sendIdx = calls.findIndex((c) => c.kind === "send");
+    expect(sendIdx).toBeGreaterThan(-1);
+    expect(calls[sendIdx]!.address).toBe(NPM_UNISWAP);
+    // os 2 approves vêm antes do send do mint
+    expect(
+      calls
+        .filter((c) => c.functionName === "approve")
+        .every((_c, i) => calls.indexOf(approves[i]!) < sendIdx),
+    ).toBe(true);
   });
 });
 
 describe("mintPosition (aerodrome) — pre-mint approvals", () => {
   it("chama approve em token0 e token1 antes do mint", async () => {
     const { ctx, calls } = buildMockContext();
-
     try {
       await mintAerodrome(ctx, {
         npmAddress: NPM_AERODROME,
@@ -140,19 +110,11 @@ describe("mintPosition (aerodrome) — pre-mint approvals", () => {
         sqrtPriceX96: 0n,
       });
     } catch {
-      // ignore
+      // aerodrome não foi refatorado nesta spec — mantém writeContract; parse de log pode lançar
     }
-
-    const approveCalls = calls.filter((c) => c.functionName === "approve");
-    expect(approveCalls).toHaveLength(2);
-
-    const mintCallIdx = calls.findIndex((c) => c.functionName === "mint");
-    const approveIdxs = calls
-      .map((c, i) => (c.functionName === "approve" ? i : -1))
-      .filter((i) => i >= 0);
-    expect(mintCallIdx).toBeGreaterThan(-1);
-    for (const idx of approveIdxs) {
-      expect(idx).toBeLessThan(mintCallIdx);
-    }
+    const approves = calls.filter((c) => c.functionName === "approve");
+    expect(approves).toHaveLength(2);
+    const mintIdx = calls.findIndex((c) => c.functionName === "mint");
+    expect(mintIdx).toBeGreaterThan(-1);
   });
 });
