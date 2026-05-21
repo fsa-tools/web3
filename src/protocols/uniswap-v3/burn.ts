@@ -1,6 +1,7 @@
-import { NPM_ABI } from "../../abis/npm.js";
+import { sendTxRequest } from "../../tx/send.js";
 import { ProtocolNotSupportedError } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
+import { planBurnPosition } from "./plan.js";
 import type { BurnOperationParams, BurnResult } from "./types.js";
 
 export async function burnPosition(
@@ -19,21 +20,10 @@ export async function burnPosition(
     );
   }
 
-  const { publicClient, walletClient } = ctx;
-  const { tokenId, gasOptions } = params;
+  const { gasOptions } = params;
 
-  const hash = await walletClient.writeContract({
-    address: npmAddress,
-    abi: NPM_ABI,
-    functionName: "burn",
-    args: [tokenId],
-    ...(gasOptions ?? {}),
-  });
+  const [burnTx] = planBurnPosition({ ...params, npmAddress });
+  const { txHash, receipt } = await sendTxRequest(ctx, burnTx!, gasOptions);
 
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash,
-    confirmations: 2,
-  });
-
-  return { txHash: hash, gasUsed: receipt.gasUsed };
+  return { txHash, gasUsed: receipt.gasUsed };
 }

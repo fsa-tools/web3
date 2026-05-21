@@ -1,13 +1,13 @@
 import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
+import { sendTxRequest } from "../../tx/send.js";
 import {
   ProtocolNotSupportedError,
   ReceiptEventNotFoundError,
 } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
+import { planCollectFees } from "./plan.js";
 import type { CollectOperationParams, CollectResult } from "./types.js";
-
-const MAX_UINT128 = 2n ** 128n - 1n;
 
 export async function collectFees(
   ctx: ChainContext,
@@ -25,28 +25,10 @@ export async function collectFees(
     );
   }
 
-  const { publicClient, walletClient } = ctx;
-  const { tokenId, recipient, gasOptions } = params;
+  const { gasOptions } = params;
 
-  const hash = await walletClient.writeContract({
-    address: npmAddress,
-    abi: NPM_ABI,
-    functionName: "collect",
-    args: [
-      {
-        tokenId,
-        recipient,
-        amount0Max: MAX_UINT128,
-        amount1Max: MAX_UINT128,
-      },
-    ],
-    ...(gasOptions ?? {}),
-  });
-
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash,
-    confirmations: 2,
-  });
+  const [collectTx] = planCollectFees({ ...params, npmAddress });
+  const { txHash, receipt } = await sendTxRequest(ctx, collectTx!, gasOptions);
 
   const logs = parseEventLogs({
     abi: NPM_ABI,
@@ -55,12 +37,12 @@ export async function collectFees(
   });
 
   const event = logs[0];
-  if (!event) throw new ReceiptEventNotFoundError("Collect", hash);
+  if (!event) throw new ReceiptEventNotFoundError("Collect", txHash);
 
   return {
     amount0: event.args.amount0,
     amount1: event.args.amount1,
-    txHash: hash,
+    txHash,
     gasUsed: receipt.gasUsed,
   };
 }

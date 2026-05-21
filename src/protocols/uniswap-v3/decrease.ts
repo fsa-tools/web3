@@ -2,12 +2,14 @@ import { parseEventLogs } from "viem";
 import { NPM_ABI } from "../../abis/npm.js";
 import { applySlippage } from "../../math/slippage.js";
 import { withRetry } from "../../utils/retry.js";
+import { sendTxRequest } from "../../tx/send.js";
 import {
   ProtocolNotSupportedError,
   SlippageExceededError,
   ReceiptEventNotFoundError,
 } from "../../errors.js";
 import type { ChainContext } from "../../context.js";
+import { planDecreaseLiquidity } from "./plan.js";
 import type { DecreaseOperationParams, DecreaseResult } from "./types.js";
 
 const DEFAULT_DEADLINE_OFFSET = 1200n;
@@ -61,26 +63,17 @@ export async function decreaseLiquidity(
   const amount0Min = applySlippage(estimatedAmount0, slippageBps);
   const amount1Min = applySlippage(estimatedAmount1, slippageBps);
 
-  const hash = await walletClient.writeContract({
-    address: npmAddress,
-    abi: NPM_ABI,
-    functionName: "decreaseLiquidity",
-    args: [
-      {
-        tokenId,
-        liquidity,
-        amount0Min,
-        amount1Min,
-        deadline: effectiveDeadline,
-      },
-    ],
-    ...(gasOptions ?? {}),
+  const [decreaseTx] = planDecreaseLiquidity({
+    tokenId,
+    liquidity,
+    slippageBps,
+    deadline: effectiveDeadline,
+    amount0Min,
+    amount1Min,
+    npmAddress,
   });
 
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash,
-    confirmations: 2,
-  });
+  const { txHash, receipt } = await sendTxRequest(ctx, decreaseTx!, gasOptions);
 
   const logs = parseEventLogs({
     abi: NPM_ABI,
@@ -89,12 +82,12 @@ export async function decreaseLiquidity(
   });
 
   const event = logs[0];
-  if (!event) throw new ReceiptEventNotFoundError("DecreaseLiquidity", hash);
+  if (!event) throw new ReceiptEventNotFoundError("DecreaseLiquidity", txHash);
 
   return {
     amount0: event.args.amount0,
     amount1: event.args.amount1,
-    txHash: hash,
+    txHash,
     gasUsed: receipt.gasUsed,
   };
 }
