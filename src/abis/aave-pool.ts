@@ -23,6 +23,18 @@ export const AAVE_POOL_ABI = [
     type: "function",
   },
   {
+    inputs: [
+      { name: "asset", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "interestRateMode", type: "uint256" },
+      { name: "onBehalfOf", type: "address" },
+    ],
+    name: "repay",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [{ name: "user", type: "address" }],
     name: "getUserAccountData",
     outputs: [
