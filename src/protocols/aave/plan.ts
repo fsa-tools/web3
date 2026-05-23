@@ -5,6 +5,7 @@ import type { TxRequest } from "../../tx/types.js";
 import type {
   SupplyOperationParams,
   WithdrawOperationParams,
+  RepayOperationParams,
 } from "./types.js";
 
 const AAVE_REFERRAL_CODE = 0;
@@ -58,6 +59,41 @@ export function planWithdraw(params: PlanWithdrawParams): TxRequest[] {
         abi: AAVE_POOL_ABI,
         functionName: "withdraw",
         args: [params.asset, params.amount, params.to],
+      }),
+      value: 0n,
+    },
+  ];
+}
+
+export type PlanRepayParams = RepayOperationParams & {
+  readonly poolAddress: Address;
+  readonly onBehalfOf: Address;
+};
+
+export function planRepay(params: PlanRepayParams): TxRequest[] {
+  return [
+    {
+      label: `approve ${params.asset} → Aave Pool (repay)`,
+      to: params.asset,
+      data: encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [params.poolAddress, params.amount],
+      }),
+      value: 0n,
+    },
+    {
+      label: "repay to Aave V3",
+      to: params.poolAddress,
+      data: encodeFunctionData({
+        abi: AAVE_POOL_ABI,
+        functionName: "repay",
+        args: [
+          params.asset,
+          params.amount,
+          BigInt(params.interestRateMode),
+          params.onBehalfOf,
+        ],
       }),
       value: 0n,
     },

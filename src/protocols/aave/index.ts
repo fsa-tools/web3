@@ -6,10 +6,16 @@ export type {
   SupplyResult,
   WithdrawOperationParams,
   WithdrawResult,
+  RepayOperationParams,
+  RepayResult,
   GetPositionValueOperationParams,
   PositionValue,
   GetUserAccountDataOperationParams,
   AccountData,
 } from "./types.js";
-export { planSupply, planWithdraw } from "./plan.js";
-export type { PlanSupplyParams, PlanWithdrawParams } from "./plan.js";
+export { planSupply, planWithdraw, planRepay } from "./plan.js";
+export type {
+  PlanSupplyParams,
+  PlanWithdrawParams,
+  PlanRepayParams,
+} from "./plan.js";

@@ -21,6 +21,18 @@ export type WithdrawResult = {
   amount: bigint;
 };
 
+export type RepayOperationParams = {
+  asset: Address;
+  amount: bigint;
+  interestRateMode: 1 | 2;
+  onBehalfOf?: Address;
+};
+
+export type RepayResult = {
+  txHash: Hash;
+  amount: bigint;
+};
+
 export type GetPositionValueOperationParams = {
   aTokenAddress: Address;
   owner: Address;
