@@ -42,5 +42,24 @@ for (const [_key, cfg] of Object.entries(SMOKE_CHAINS)) {
       const withdrawResult = await aave.withdraw(ctx, { asset, amount });
       expect(withdrawResult.txHash).toMatch(/^0x[0-9a-f]{64}$/i);
     }, 120_000);
+
+    it("planRepay produz [approve, Pool.repay] com encoding válido", () => {
+      const ctx = loadChainContext(cfg)!;
+      const pool = ctx.addresses.aave!.pool;
+      const asset = cfg.aaveReserves!.usdc!;
+      const owner = ctx.walletClient!.account.address;
+
+      const txs = aave.planRepay({
+        asset,
+        amount: 1_000_000n,
+        interestRateMode: 2,
+        poolAddress: pool,
+        onBehalfOf: owner,
+      });
+      expect(txs).toHaveLength(2);
+      expect(txs[0]!.to.toLowerCase()).toBe(asset.toLowerCase());
+      expect(txs[1]!.to.toLowerCase()).toBe(pool.toLowerCase());
+      expect(txs[1]!.data.length).toBeGreaterThan(10);
+    });
   });
 }
