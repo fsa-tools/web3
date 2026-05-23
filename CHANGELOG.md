@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.1 — 2026-05-22
+
+### Added
+- `aave.planRepay({ asset, amount, interestRateMode, onBehalfOf, poolAddress })` —
+  monta `[approve, Pool.repay]` simétrico a `planSupply`. ABI da Pool agora expõe `repay`.
+- Tipos `PlanRepayParams`, `RepayOperationParams`, `RepayResult`.
+
 ## 3.1.0 — 2026-05-21
 
 ### Added
