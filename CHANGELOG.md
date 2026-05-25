@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.2 — 2026-05-25
+
+### Changed
+- Migração de repositório: `gitlab.com/fsa-portfolio/fsa-web3` → `github.com/fsa-tools/web3`.
+- Scope do pacote: `@fsa/web3` → `@fsa-tools/web3`.
+- Registry de publicação: Verdaccio interno → GitHub Packages (`npm.pkg.github.com`).
+- CI: GitHub Actions substitui o pipeline GitLab; publish automático em tag `v*.*.*`.
+
 ## 3.1.1 — 2026-05-22
 
 ### Added
