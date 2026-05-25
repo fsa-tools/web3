@@ -3,8 +3,8 @@
 ## Packages
 ```yaml
 packages:
-  - name: "@fsa/web3"
+  - name: "@fsa-tools/web3"
     lang: typescript
     path: .
-    registry: verdaccio
+    registry: github-packages
 ```

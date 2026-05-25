@@ -1,10 +1,13 @@
 {
-  "name": "@fsa/web3",
+  "name": "@fsa-tools/web3",
   "version": "3.1.1",
   "description": "Shared Web3 utilities: viem clients, ERC20 helpers, Uniswap V3 / Aerodrome / Aave V3 protocol wrappers",
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:fsa-portfolio/fsa-web3.git"
+    "url": "git@github.com:fsa-tools/web3.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "files": [
     "dist"

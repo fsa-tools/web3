@@ -1,24 +1,27 @@
-# @fsa/web3
+# @fsa-tools/web3
 
 Shared Web3 utilities para bots DeFi do portfólio: viem clients, ERC20 helpers, wrappers de Uniswap V3, Aerodrome e Aave V3.
 
 ## Install
 
 ```bash
-npm install @fsa/web3
+npm install @fsa-tools/web3
 ```
 
-Requer `.npmrc` apontando pro Verdaccio interno:
+Requer `.npmrc` apontando pro GitHub Packages:
 
 ```
-@fsa:registry=http://avell.local:4873
+@fsa-tools:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
+
+`NODE_AUTH_TOKEN` é um Personal Access Token com escopo `read:packages`.
 
 ## Uso
 
 ```typescript
-import { createChainContext } from "@fsa/web3/context";
-import { mintPosition } from "@fsa/web3/uniswap-v3";
+import { createChainContext } from "@fsa-tools/web3/context";
+import { mintPosition } from "@fsa-tools/web3/uniswap-v3";
 import type { Hex } from "viem";
 
 const ctx = createChainContext({
@@ -46,8 +49,8 @@ In v1.x, each function received `publicClient`, `walletClient`, and `chainId` di
 ### Before (v1.x)
 
 ```typescript
-import { createClients } from "@fsa/web3/utils";
-import { mintPosition } from "@fsa/web3/uniswap-v3";
+import { createClients } from "@fsa-tools/web3/utils";
+import { mintPosition } from "@fsa-tools/web3/uniswap-v3";
 
 const { publicClient, walletClient } = createClients({
   chainId: 8453,
@@ -69,8 +72,8 @@ await mintPosition({
 ### After (v2.0)
 
 ```typescript
-import { createChainContext } from "@fsa/web3/context";
-import { mintPosition } from "@fsa/web3/uniswap-v3";
+import { createChainContext } from "@fsa-tools/web3/context";
+import { mintPosition } from "@fsa-tools/web3/uniswap-v3";
 
 const ctx = createChainContext({
   chainId: 8453,
@@ -90,7 +93,7 @@ await mintPosition(ctx, {
 
 | v1.x | v2.0 |
 |------|-------|
-| `createClients(params)` from `@fsa/web3/utils` | `createChainContext(params)` from `@fsa/web3/context` |
+| `createClients(params)` from `@fsa-tools/web3/utils` | `createChainContext(params)` from `@fsa-tools/web3/context` |
 | `rpcUrl: string` | `rpcUrls: string[]` (fallback always active) |
 | `MintParams` | `MintOperationParams` |
 | `SupplyParams` | `SupplyOperationParams` |
@@ -111,7 +114,7 @@ import {
   ProtocolNotSupportedError,
   SlippageExceededError,
   ReceiptEventNotFoundError,
-} from "@fsa/web3/errors";
+} from "@fsa-tools/web3/errors";
 
 try {
   await mintPosition(ctx, params);
