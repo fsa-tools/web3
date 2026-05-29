@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.2.0 — 2026-05-29
+
+### Added
+- `aerodrome.planMint / planDecreaseLiquidity / planCollectFees / planBurnPosition` —
+  planners puros (`TxRequest[]`) das 4 operações de LP, espelhando o calldata das funções
+  de execução (`AERODROME_NPM_ABI`, `tickSpacing`, `nftId`→`tokenId`, `sqrtPriceX96`).
+- `uniswapV3.planSwapExactInputSingle({ tokenIn, tokenOut, fee, amountIn, routerAddress, recipient, amountOutMinimum })` —
+  planner puro do swap `exactInputSingle`, retornando `[approve, SwapRouter.exactInputSingle]`.
+
 ## 3.1.2 — 2026-05-25
 
 ### Changed
