@@ -24,10 +24,12 @@ export {
   planDecreaseLiquidity,
   planCollectFees,
   planBurnPosition,
+  planSwapExactInputSingle,
 } from "./plan.js";
 export type {
   PlanMintParams,
   PlanDecreaseParams,
   PlanCollectParams,
   PlanBurnParams,
+  PlanSwapParams,
 } from "./plan.js";

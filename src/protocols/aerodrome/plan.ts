@@ -1,7 +1,6 @@
 import { encodeFunctionData, type Address } from "viem";
-import { NPM_ABI } from "../../abis/npm.js";
+import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
 import { ERC20_ABI } from "../../abis/erc20.js";
-import { SWAP_ROUTER_ABI } from "../../abis/swap-router.js";
 import { applySlippage } from "../../math/slippage.js";
 import type { TxRequest } from "../../tx/types.js";
 import type {
@@ -9,13 +8,11 @@ import type {
   DecreaseOperationParams,
   CollectOperationParams,
   BurnOperationParams,
-  SwapOperationParams,
 } from "./types.js";
 
 const MAX_UINT128 = 2n ** 128n - 1n;
 
 export type PlanMintParams = MintOperationParams & {
-  readonly npmAddress: Address;
   readonly recipient: Address;
   readonly deadline: bigint;
 };
@@ -42,16 +39,16 @@ export function planMint(params: PlanMintParams): TxRequest[] {
   const amount0Min = applySlippage(params.amount0Desired, params.slippageBps);
   const amount1Min = applySlippage(params.amount1Desired, params.slippageBps);
   const mint: TxRequest = {
-    label: "mint Uniswap V3 LP position",
+    label: "mint Aerodrome LP position",
     to: params.npmAddress,
     data: encodeFunctionData({
-      abi: NPM_ABI,
+      abi: AERODROME_NPM_ABI,
       functionName: "mint",
       args: [
         {
           token0: params.token0,
           token1: params.token1,
-          fee: params.fee,
+          tickSpacing: params.tickSpacing,
           tickLower: params.tickLower,
           tickUpper: params.tickUpper,
           amount0Desired: params.amount0Desired,
@@ -60,6 +57,7 @@ export function planMint(params: PlanMintParams): TxRequest[] {
           amount1Min,
           recipient: params.recipient,
           deadline: params.deadline,
+          sqrtPriceX96: params.sqrtPriceX96,
         },
       ],
     }),
@@ -70,13 +68,13 @@ export function planMint(params: PlanMintParams): TxRequest[] {
       params.token0,
       params.npmAddress,
       params.amount0Desired,
-      `approve token0 (${params.token0}) → Uniswap V3 NPM`,
+      `approve token0 (${params.token0}) → Aerodrome NPM`,
     ),
     approveTx(
       params.token1,
       params.npmAddress,
       params.amount1Desired,
-      `approve token1 (${params.token1}) → Uniswap V3 NPM`,
+      `approve token1 (${params.token1}) → Aerodrome NPM`,
     ),
     mint,
   ];
@@ -84,9 +82,8 @@ export function planMint(params: PlanMintParams): TxRequest[] {
 
 export type PlanDecreaseParams = Omit<
   DecreaseOperationParams,
-  "slippageBps"
+  "amount0Min" | "amount1Min" | "deadline" | "gasOptions"
 > & {
-  readonly npmAddress: Address;
   readonly deadline: bigint;
   readonly amount0Min: bigint;
   readonly amount1Min: bigint;
@@ -95,14 +92,14 @@ export type PlanDecreaseParams = Omit<
 export function planDecreaseLiquidity(params: PlanDecreaseParams): TxRequest[] {
   return [
     {
-      label: `decrease Uniswap V3 liquidity (tokenId ${params.tokenId})`,
+      label: `decrease Aerodrome liquidity (tokenId ${params.nftId})`,
       to: params.npmAddress,
       data: encodeFunctionData({
-        abi: NPM_ABI,
+        abi: AERODROME_NPM_ABI,
         functionName: "decreaseLiquidity",
         args: [
           {
-            tokenId: params.tokenId,
+            tokenId: params.nftId,
             liquidity: params.liquidity,
             amount0Min: params.amount0Min,
             amount1Min: params.amount1Min,
@@ -116,20 +113,20 @@ export function planDecreaseLiquidity(params: PlanDecreaseParams): TxRequest[] {
 }
 
 export type PlanCollectParams = CollectOperationParams & {
-  readonly npmAddress: Address;
+  readonly recipient: Address;
 };
 
 export function planCollectFees(params: PlanCollectParams): TxRequest[] {
   return [
     {
-      label: `collect Uniswap V3 fees (tokenId ${params.tokenId})`,
+      label: `collect Aerodrome fees (tokenId ${params.nftId})`,
       to: params.npmAddress,
       data: encodeFunctionData({
-        abi: NPM_ABI,
+        abi: AERODROME_NPM_ABI,
         functionName: "collect",
         args: [
           {
-            tokenId: params.tokenId,
+            tokenId: params.nftId,
             recipient: params.recipient,
             amount0Max: MAX_UINT128,
             amount1Max: MAX_UINT128,
@@ -141,68 +138,19 @@ export function planCollectFees(params: PlanCollectParams): TxRequest[] {
   ];
 }
 
-export type PlanBurnParams = BurnOperationParams & {
-  readonly npmAddress: Address;
-};
+export type PlanBurnParams = BurnOperationParams;
 
 export function planBurnPosition(params: PlanBurnParams): TxRequest[] {
   return [
     {
-      label: `burn Uniswap V3 position NFT (tokenId ${params.tokenId})`,
+      label: `burn Aerodrome position NFT (tokenId ${params.nftId})`,
       to: params.npmAddress,
       data: encodeFunctionData({
-        abi: NPM_ABI,
+        abi: AERODROME_NPM_ABI,
         functionName: "burn",
-        args: [params.tokenId],
+        args: [params.nftId],
       }),
       value: 0n,
     },
-  ];
-}
-
-export type PlanSwapParams = Omit<SwapOperationParams, "slippageBps"> & {
-  readonly routerAddress: Address;
-  readonly recipient: Address;
-  readonly amountOutMinimum: bigint;
-};
-
-export function planSwapExactInputSingle(params: PlanSwapParams): TxRequest[] {
-  const {
-    tokenIn,
-    tokenOut,
-    fee,
-    amountIn,
-    amountOutMinimum,
-    routerAddress,
-    recipient,
-  } = params;
-  const swap: TxRequest = {
-    label: `swap exactInputSingle ${tokenIn} → ${tokenOut} via Uniswap V3`,
-    to: routerAddress,
-    data: encodeFunctionData({
-      abi: SWAP_ROUTER_ABI,
-      functionName: "exactInputSingle",
-      args: [
-        {
-          tokenIn,
-          tokenOut,
-          fee,
-          recipient,
-          amountIn,
-          amountOutMinimum,
-          sqrtPriceLimitX96: 0n,
-        },
-      ],
-    }),
-    value: 0n,
-  };
-  return [
-    approveTx(
-      tokenIn,
-      routerAddress,
-      amountIn,
-      `approve tokenIn (${tokenIn}) → Uniswap V3 SwapRouter`,
-    ),
-    swap,
   ];
 }
