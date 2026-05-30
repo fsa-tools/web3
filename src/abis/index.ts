@@ -5,3 +5,5 @@ export { AERODROME_NPM_ABI, AERODROME_POOL_ABI } from "./aerodrome-npm.js";
 export { AAVE_POOL_ABI } from "./aave-pool.js";
 export { SWAP_ROUTER_ABI } from "./swap-router.js";
 export { QUOTER_V2_ABI } from "./quoter.js";
+export { AERODROME_SWAP_ROUTER_ABI } from "./aerodrome-swap-router.js";
+export { AERODROME_QUOTER_ABI } from "./aerodrome-quoter.js";

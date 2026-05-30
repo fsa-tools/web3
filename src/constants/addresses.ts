@@ -27,6 +27,8 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
     wethUsdcPool: "0xd0b53D9277642d899DF5C87A3966A349A798F224",
     aerodrome: {
       npm: "0x827922686190790b37229fd06084350E74485b72",
+      swapRouter: "0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5",
+      quoter: "0x254cF9E1E6e233aa1AC962CB9B05b2cfeAaE15b0",
     },
     uniswapV3: {
       npm: "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1",

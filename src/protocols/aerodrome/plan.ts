@@ -1,5 +1,6 @@
 import { encodeFunctionData, type Address } from "viem";
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
+import { AERODROME_SWAP_ROUTER_ABI } from "../../abis/aerodrome-swap-router.js";
 import { ERC20_ABI } from "../../abis/erc20.js";
 import { applySlippage } from "../../math/slippage.js";
 import type { TxRequest } from "../../tx/types.js";
@@ -8,6 +9,7 @@ import type {
   DecreaseOperationParams,
   CollectOperationParams,
   BurnOperationParams,
+  SwapOperationParams,
 } from "./types.js";
 
 const MAX_UINT128 = 2n ** 128n - 1n;
@@ -152,5 +154,58 @@ export function planBurnPosition(params: PlanBurnParams): TxRequest[] {
       }),
       value: 0n,
     },
+  ];
+}
+
+export type PlanSwapParams = Omit<
+  SwapOperationParams,
+  "slippageBps" | "deadline" | "gasOptions"
+> & {
+  readonly routerAddress: Address;
+  readonly recipient: Address;
+  readonly amountOutMinimum: bigint;
+  readonly deadline: bigint;
+};
+
+export function planSwapExactInputSingle(params: PlanSwapParams): TxRequest[] {
+  const {
+    tokenIn,
+    tokenOut,
+    tickSpacing,
+    amountIn,
+    amountOutMinimum,
+    routerAddress,
+    recipient,
+    deadline,
+  } = params;
+  const swap: TxRequest = {
+    label: `swap exactInputSingle ${tokenIn} → ${tokenOut} via Aerodrome Slipstream`,
+    to: routerAddress,
+    data: encodeFunctionData({
+      abi: AERODROME_SWAP_ROUTER_ABI,
+      functionName: "exactInputSingle",
+      args: [
+        {
+          tokenIn,
+          tokenOut,
+          tickSpacing,
+          recipient,
+          deadline,
+          amountIn,
+          amountOutMinimum,
+          sqrtPriceLimitX96: 0n,
+        },
+      ],
+    }),
+    value: 0n,
+  };
+  return [
+    approveTx(
+      tokenIn,
+      routerAddress,
+      amountIn,
+      `approve tokenIn (${tokenIn}) → Aerodrome SwapRouter`,
+    ),
+    swap,
   ];
 }

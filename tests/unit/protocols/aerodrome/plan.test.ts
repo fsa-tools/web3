@@ -5,8 +5,10 @@ import {
   planDecreaseLiquidity,
   planCollectFees,
   planBurnPosition,
+  planSwapExactInputSingle,
 } from "../../../../src/protocols/aerodrome/plan.js";
 import { AERODROME_NPM_ABI } from "../../../../src/abis/aerodrome-npm.js";
+import { AERODROME_SWAP_ROUTER_ABI } from "../../../../src/abis/aerodrome-swap-router.js";
 import { ERC20_ABI } from "../../../../src/abis/erc20.js";
 
 const NPM: Address = "0x827922686190790b37229fd06084350E74485b72";
@@ -151,5 +153,65 @@ describe("planBurnPosition (aerodrome)", () => {
     });
     expect(decoded.functionName).toBe("burn");
     expect(decoded.args![0]).toBe(NFT_ID);
+  });
+});
+
+describe("planSwapExactInputSingle (aerodrome)", () => {
+  const ROUTER: Address = "0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5";
+  const TOKEN_IN: Address = "0x4200000000000000000000000000000000000006";
+  const TOKEN_OUT: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+  const RECIPIENT: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
+
+  const params = {
+    tokenIn: TOKEN_IN,
+    tokenOut: TOKEN_OUT,
+    tickSpacing: 100,
+    amountIn: 1_000_000_000_000_000_000n,
+    amountOutMinimum: 1_980_000_000n,
+    routerAddress: ROUTER,
+    recipient: RECIPIENT,
+    deadline: 1_900_000_000n,
+  };
+
+  it("devolve 2 TxRequest: approve tokenIn e swap", () => {
+    const txs = planSwapExactInputSingle(params);
+    expect(txs).toHaveLength(2);
+    expect(txs.every((t) => t.value === 0n)).toBe(true);
+  });
+
+  it("txs[0].to === tokenIn (approve)", () => {
+    const txs = planSwapExactInputSingle(params);
+    expect(txs[0]!.to).toBe(TOKEN_IN);
+  });
+
+  it("calldata de approve aprova o routerAddress pelo amountIn", () => {
+    const txs = planSwapExactInputSingle(params);
+    const decoded = decodeFunctionData({ abi: ERC20_ABI, data: txs[0]!.data });
+    expect(decoded.functionName).toBe("approve");
+    expect(decoded.args).toEqual([ROUTER, params.amountIn]);
+  });
+
+  it("txs[1].to === routerAddress com value === 0n", () => {
+    const txs = planSwapExactInputSingle(params);
+    expect(txs[1]!.to).toBe(ROUTER);
+    expect(txs[1]!.value).toBe(0n);
+  });
+
+  it("calldata de exactInputSingle carrega todos os campos corretos", () => {
+    const txs = planSwapExactInputSingle(params);
+    const decoded = decodeFunctionData({
+      abi: AERODROME_SWAP_ROUTER_ABI,
+      data: txs[1]!.data,
+    });
+    expect(decoded.functionName).toBe("exactInputSingle");
+    const args = decoded.args![0] as Record<string, unknown>;
+    expect(args["tokenIn"]).toBe(TOKEN_IN);
+    expect(args["tokenOut"]).toBe(TOKEN_OUT);
+    expect(args["tickSpacing"]).toBe(100);
+    expect(args["recipient"]).toBe(RECIPIENT);
+    expect(args["deadline"]).toBe(1_900_000_000n);
+    expect(args["amountIn"]).toBe(params.amountIn);
+    expect(args["amountOutMinimum"]).toBe(params.amountOutMinimum);
+    expect(args["sqrtPriceLimitX96"]).toBe(0n);
   });
 });

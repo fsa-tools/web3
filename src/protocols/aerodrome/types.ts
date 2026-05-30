@@ -65,3 +65,35 @@ export type BurnResult = {
   txHash: Hash;
   gasUsed: bigint;
 };
+
+export type SwapOperationParams = {
+  tokenIn: Address;
+  tokenOut: Address;
+  tickSpacing: number;
+  amountIn: bigint;
+  slippageBps: number;
+  deadline?: bigint;
+  gasOptions?: GasOptions;
+};
+
+export type SwapResult = {
+  amountOut: bigint;
+  txHash: Hash;
+  gasUsed: bigint;
+};
+
+export type QuoteOperationParams = {
+  tokenIn: Address;
+  tokenOut: Address;
+  tickSpacing: number;
+  amountIn: bigint;
+};
+
+export type QuoteResult = {
+  /** Output efetivo do swap — já descontados fee do pool e price impact. */
+  amountOut: bigint;
+  /** sqrtPriceX96 do pool após o swap simulado. */
+  sqrtPriceX96After: bigint;
+  initializedTicksCrossed: number;
+  gasEstimate: bigint;
+};
