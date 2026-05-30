@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.3.0 — 2026-05-30
+
+### Added
+- `aerodrome.planSwapExactInputSingle({ tokenIn, tokenOut, tickSpacing, amountIn, routerAddress, recipient, amountOutMinimum, deadline })` —
+  planner puro do swap `exactInputSingle` no Aerodrome Slipstream, retornando `[approve, SwapRouter.exactInputSingle]`.
+- `aerodrome.swapExactInputSingle(ctx, params)` / `aerodrome.quoteExactInputSingle(ctx, params)` —
+  execução e cotação single-hop via SwapRouter/Quoter do Slipstream (paridade com `uniswap-v3`).
+- ABIs `AERODROME_SWAP_ROUTER_ABI` / `AERODROME_QUOTER_ABI` (Slipstream: `tickSpacing` int24, `deadline` no router).
+- Endereços Base (8453): `aerodrome.swapRouter` e `aerodrome.quoter`.
+
 ## 3.2.0 — 2026-05-29
 
 ### Added
