@@ -1,5 +1,6 @@
 import type { Address, Hash } from "viem";
 import type { GasOptions } from "../../utils/gas.js";
+import type { ApprovalMode } from "../../utils/erc20.js";
 
 export type { GasOptions };
 
@@ -14,6 +15,7 @@ export type MintOperationParams = {
   slippageBps: number;
   deadline?: bigint;
   gasOptions?: GasOptions;
+  approvalMode?: ApprovalMode;
 };
 
 export type DecreaseOperationParams = {
@@ -70,6 +72,7 @@ export type SwapOperationParams = {
   amountIn: bigint;
   slippageBps: number;
   gasOptions?: GasOptions;
+  approvalMode?: ApprovalMode;
 };
 
 export type SwapResult = {

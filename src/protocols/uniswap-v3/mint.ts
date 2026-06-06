@@ -40,11 +40,13 @@ export async function mintPosition(
     token: params.token0,
     spender: npmAddress,
     amount: params.amount0Desired,
+    approvalMode: params.approvalMode,
   });
   await ensureAllowance(ctx, {
     token: params.token1,
     spender: npmAddress,
     amount: params.amount1Desired,
+    approvalMode: params.approvalMode,
   });
 
   const effectiveDeadline =

@@ -34,7 +34,15 @@ export async function swapExactInputSingle(
     );
   }
 
-  const { tokenIn, tokenOut, fee, amountIn, slippageBps, gasOptions } = params;
+  const {
+    tokenIn,
+    tokenOut,
+    fee,
+    amountIn,
+    slippageBps,
+    gasOptions,
+    approvalMode,
+  } = params;
   validateAddress(tokenIn);
   validateAddress(tokenOut);
 
@@ -45,6 +53,7 @@ export async function swapExactInputSingle(
     token: tokenIn,
     spender: swapRouter,
     amount: amountIn,
+    approvalMode,
   });
 
   // amountOutMinimum sobre a cotação real do QuoterV2 — já inclui fee do pool

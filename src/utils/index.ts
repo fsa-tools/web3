@@ -26,6 +26,7 @@ export {
 export {
   ensureAllowance,
   getBalance,
+  type ApprovalMode,
   type EnsureAllowanceParams,
   type AllowanceResult,
   type GetBalanceParams,

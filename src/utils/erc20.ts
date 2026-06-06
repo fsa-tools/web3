@@ -5,10 +5,13 @@ import { validateAddress } from "./address.js";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
 
+export type ApprovalMode = "exact" | "unlimited";
+
 export type EnsureAllowanceParams = {
   token: Address;
   spender: Address;
   amount: bigint;
+  approvalMode?: ApprovalMode;
 };
 
 export type AllowanceResult = {
@@ -56,11 +59,13 @@ export async function ensureAllowance(
       confirmations: 2,
     });
   }
+  const approveAmount =
+    (params.approvalMode ?? "unlimited") === "exact" ? amount : MAX_UINT256;
   const txHash = await walletClient.writeContract({
     address: token,
     abi: ERC20_ABI,
     functionName: "approve",
-    args: [spender, MAX_UINT256],
+    args: [spender, approveAmount],
   });
   return { approved: true, txHash };
 }

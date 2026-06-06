@@ -140,3 +140,47 @@ v1.7.1 é uma reconstrução completa do source tree a partir do `dist/` compila
 ## Segurança
 
 Ver `SECURITY.md` para known issues em v1.7.x.
+
+### Approval mode (allowance exata vs. ilimitada)
+
+`ensureAllowance` e as operações de protocolo (`MintOperationParams`, `SwapOperationParams` de uniswap-v3 e aerodrome) aceitam o parâmetro opcional `approvalMode`:
+
+| Valor | Comportamento | Trade-off |
+|-------|---------------|-----------|
+| `"unlimited"` *(default)* | `approve(spender, MAX_UINT256)` | Allowance reaproveita entre operações → menos txs de approve, mais gas eficiente |
+| `"exact"` | `approve(spender, amount)` | Nunca deixa allowance ilimitada no spender → mais seguro, mas custa um `approve` por operação |
+
+O default `"unlimited"` é retrocompatível — código existente não precisa mudar.
+
+> **Nota:** Aave não é afetado por esse parâmetro; já usa approve exato internamente via modelo plan.
+
+**Exemplo — `ensureAllowance` direto:**
+
+```typescript
+import { ensureAllowance } from "@fsa-tools/web3/erc20";
+
+await ensureAllowance(ctx, {
+  token: "0x...",
+  spender: "0x...",
+  amount: 1_000_000n,
+  approvalMode: "exact", // aprova só o amount necessário
+});
+```
+
+**Exemplo — `mintPosition` (uniswap-v3) com allowance exata:**
+
+```typescript
+import { mintPosition } from "@fsa-tools/web3/uniswap-v3";
+
+await mintPosition(ctx, {
+  token0: "0x...",
+  token1: "0x...",
+  fee: 500,
+  tickLower: -60_000,
+  tickUpper: 60_000,
+  amount0Desired: 1000000n,
+  amount1Desired: 1000000000000000n,
+  slippageBps: 50,
+  approvalMode: "exact", // repassado internamente a ensureAllowance
+});
+```

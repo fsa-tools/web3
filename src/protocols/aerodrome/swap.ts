@@ -35,8 +35,15 @@ export async function swapExactInputSingle(
     );
   }
 
-  const { tokenIn, tokenOut, tickSpacing, amountIn, slippageBps, gasOptions } =
-    params;
+  const {
+    tokenIn,
+    tokenOut,
+    tickSpacing,
+    amountIn,
+    slippageBps,
+    gasOptions,
+    approvalMode,
+  } = params;
   validateAddress(tokenIn);
   validateAddress(tokenOut);
 
@@ -47,6 +54,7 @@ export async function swapExactInputSingle(
     token: tokenIn,
     spender: swapRouter,
     amount: amountIn,
+    approvalMode,
   });
 
   const deadline =
