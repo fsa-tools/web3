@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.0 — 2026-06-06
+
+### Added
+- `approvalMode?: 'exact' | 'unlimited'` em `ensureAllowance` (default `'unlimited'` = `MAX_UINT256`, retrocompat) —
+  modo opt-in de approval exato (`approve(amount)`) para reduzir a superfície de allowance ilimitada concedida ao spender.
+- Flag `approvalMode` propagada por `MintOperationParams`/`SwapOperationParams` de `uniswap-v3` e `aerodrome` (mint + swap).
+- Tipo `ApprovalMode` exportado de `@fsa-tools/web3/utils`.
+
 ## 3.3.0 — 2026-05-30
 
 ### Added
