@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.5.0 — 2026-06-08
+
+### Added
+- `rpc?: RpcOptions` em `CreateChainContextParams` (`createChainContext`) — knobs opt-in de resiliência RPC:
+  `timeoutMs`/`retryCount` repassados ao `http()` interno; `cooldownMs` pula um provider 429'd pela janela de cooldown;
+  `maxConcurrency` limita eth_calls concorrentes por chain via semáforo in-house (sem dep nova). Omitir `rpc` mantém o
+  transport idêntico ao anterior (retrocompat absoluta). (ref #3)
+- Tipo `RpcOptions` exportado de `@fsa-tools/web3/context`.
+
 ## 3.4.0 — 2026-06-06
 
 ### Added
