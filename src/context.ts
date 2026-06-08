@@ -25,6 +25,14 @@ import {
 } from "viem/chains";
 import { ADDRESSES, type ChainAddresses } from "./constants/addresses.js";
 import { ChainNotSupportedError } from "./errors.js";
+import { withConcurrencyLimit, withCooldown } from "./utils/rpc-pool.js";
+
+export type RpcOptions = {
+  timeoutMs?: number;
+  retryCount?: number;
+  cooldownMs?: number;
+  maxConcurrency?: number;
+};
 
 export type ChainContext = {
   publicClient: PublicClient;
@@ -38,6 +46,7 @@ export type CreateChainContextParams = {
   rpcUrls: string[];
   privateKey?: Hex;
   decimalsCache?: Map<string, number>;
+  rpc?: RpcOptions;
 };
 
 const CHAIN_MAP: Record<number, Chain> = {
@@ -61,10 +70,19 @@ export function createChainContext(
   const addresses = ADDRESSES[params.chainId];
   if (!addresses) throw new ChainNotSupportedError(params.chainId);
 
-  const transport = fallback(
-    params.rpcUrls.map((url) => http(url)),
-    { rank: true, retryCount: 1 },
-  );
+  const rpc = params.rpc;
+  const httpOptions =
+    rpc && (rpc.timeoutMs !== undefined || rpc.retryCount !== undefined)
+      ? { timeout: rpc.timeoutMs, retryCount: rpc.retryCount }
+      : undefined;
+  const providers = params.rpcUrls.map((url) => {
+    const base = httpOptions ? http(url, httpOptions) : http(url);
+    return rpc?.cooldownMs ? withCooldown(base, rpc.cooldownMs) : base;
+  });
+  const ranked = fallback(providers, { rank: true, retryCount: 1 });
+  const transport = rpc?.maxConcurrency
+    ? withConcurrencyLimit(ranked, rpc.maxConcurrency)
+    : ranked;
 
   const publicClient = createPublicClient({ chain, transport }) as PublicClient;
 
