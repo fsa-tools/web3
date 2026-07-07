@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.6.1 — 2026-07-07
+
+### Fixed
+- `ensureAllowance` (`src/utils/erc20.ts`) agora aguarda o receipt do `approve` final (`waitForTransactionReceipt`)
+  antes de resolver, espelhando o path do reset `approve(0)`. Antes retornava logo após enviar a tx; sob block time
+  > 0 (Base ~2s, Anvil `--block-time N`) uma sequência `approve → mint`/`swap` no mesmo ciclo revertia com
+  `allowance` ainda `0` (approve não minerado). Consumidores não precisam mais replicar o `waitForTransactionReceipt`
+  no adapter. (ref #6)
+
 ## 3.6.0 — 2026-07-07
 
 ### Added
