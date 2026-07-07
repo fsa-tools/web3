@@ -231,6 +231,94 @@ describe("withCooldown", () => {
     expect(inner).toHaveBeenCalledTimes(1);
   });
 
+  it("activates cooldown on 429 via .statusCode", async () => {
+    const err429 = Object.assign(new Error("rate limit"), { statusCode: 429 });
+    const inner = vi.fn().mockRejectedValueOnce(err429).mockResolvedValue("ok");
+    const t = withCooldown(mkTransport(inner), 10_000);
+    const client = t({ chain: undefined, pollingInterval: 4_000 });
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "rate limit",
+    );
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "provider in cooldown",
+    );
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it("activates cooldown on 429 signalled only in .message", async () => {
+    const err429 = new Error("HTTP 429 Too Many Requests");
+    const inner = vi.fn().mockRejectedValueOnce(err429).mockResolvedValue("ok");
+    const t = withCooldown(mkTransport(inner), 10_000);
+    const client = t({ chain: undefined, pollingInterval: 4_000 });
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "HTTP 429 Too Many Requests",
+    );
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "provider in cooldown",
+    );
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it("activates cooldown on 429 signalled only in .statusText", async () => {
+    const err429 = Object.assign(new Error("req failed"), {
+      statusText: "Too Many Requests",
+    });
+    const inner = vi.fn().mockRejectedValueOnce(err429).mockResolvedValue("ok");
+    const t = withCooldown(mkTransport(inner), 10_000);
+    const client = t({ chain: undefined, pollingInterval: 4_000 });
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "req failed",
+    );
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "provider in cooldown",
+    );
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it("detects 429 via cause chain using .statusCode", async () => {
+    const cause = Object.assign(new Error("http"), { statusCode: 429 });
+    const wrapped = Object.assign(new Error("wrapper"), { cause });
+    const inner = vi
+      .fn()
+      .mockRejectedValueOnce(wrapped)
+      .mockResolvedValue("ok");
+    const t = withCooldown(mkTransport(inner), 5_000);
+    const client = t({ chain: undefined, pollingInterval: 4_000 });
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "wrapper",
+    );
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "provider in cooldown",
+    );
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT activate cooldown on status 500 or unrelated message", async () => {
+    const err500 = Object.assign(new Error("gateway timeout"), {
+      status: 500,
+    });
+    const inner = vi.fn().mockRejectedValueOnce(err500).mockResolvedValue("ok");
+    const t = withCooldown(mkTransport(inner), 10_000);
+    const client = t({ chain: undefined, pollingInterval: 4_000 });
+
+    await expect(client.request({ method: "eth_call" })).rejects.toThrow(
+      "gateway timeout",
+    );
+
+    // next call must reach inner (no cooldown)
+    const result = await client.request({ method: "eth_call" });
+    expect(result).toBe("ok");
+    expect(inner).toHaveBeenCalledTimes(2);
+  });
+
   it("each transport instance has independent cooldown state", async () => {
     const err429 = Object.assign(new Error("rate limit"), { status: 429 });
     const inner1 = vi

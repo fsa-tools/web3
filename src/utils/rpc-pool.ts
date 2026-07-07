@@ -34,15 +34,45 @@ export function createSemaphore(max: number) {
 // withCooldown
 // ---------------------------------------------------------------------------
 
+const CAUSE_CHAIN_MAX_DEPTH = 5;
+const HTTP_TOO_MANY_REQUESTS = 429;
+const RATE_LIMIT_TEXT_SIGNALS = [
+  String(HTTP_TOO_MANY_REQUESTS),
+  "too many requests",
+  "rate limit",
+];
+
+function hasRateLimitSignal(text: string): boolean {
+  const lower = text.toLowerCase();
+  return RATE_LIMIT_TEXT_SIGNALS.some((signal) => lower.includes(signal));
+}
+
 function is429(err: unknown): boolean {
   let cur: unknown = err;
-  for (let i = 0; i < 5 && cur; i++) {
-    if (
-      typeof cur === "object" &&
-      cur !== null &&
-      (cur as { status?: number }).status === 429
-    )
-      return true;
+  for (let i = 0; i < CAUSE_CHAIN_MAX_DEPTH && cur; i++) {
+    if (typeof cur === "object" && cur !== null) {
+      const candidate = cur as {
+        status?: number;
+        statusCode?: number;
+        message?: string;
+        statusText?: string;
+      };
+      if (
+        candidate.status === HTTP_TOO_MANY_REQUESTS ||
+        candidate.statusCode === HTTP_TOO_MANY_REQUESTS
+      )
+        return true;
+      if (
+        typeof candidate.message === "string" &&
+        hasRateLimitSignal(candidate.message)
+      )
+        return true;
+      if (
+        typeof candidate.statusText === "string" &&
+        hasRateLimitSignal(candidate.statusText)
+      )
+        return true;
+    }
     cur = (cur as { cause?: unknown }).cause;
   }
   return false;
