@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.6.0 — 2026-07-07
+
+### Added
+- `slippageBps?: number` em `DecreaseOperationParams` do Aerodrome (`decreaseLiquidity`) — quando presente e os mins
+  ausentes, deriva `amount0Min`/`amount1Min` por simulação (`simulateContract` com mins `0n` + `applySlippage`),
+  espelhando o path do `uniswap-v3`. Mins explícitos têm precedência (override). Omitir `slippageBps` mantém o
+  comportamento anterior (`?? 0n`, sem simulação). (ref #4)
+
+### Fixed
+- `is429` (`withCooldown`, pool RPC) agora reconhece 429 em múltiplas shapes — `.status`/`.statusCode` numéricos e
+  sinais textuais (`429` / `too many requests` / `rate limit`) em `.message`/`.statusText` — percorrendo a cause-chain;
+  magic numbers extraídos para constantes nomeadas (`CAUSE_CHAIN_MAX_DEPTH`, `HTTP_TOO_MANY_REQUESTS`). (ref #5)
+
 ## 3.5.0 — 2026-06-08
 
 ### Added
