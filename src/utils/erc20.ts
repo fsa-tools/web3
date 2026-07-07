@@ -67,6 +67,7 @@ export async function ensureAllowance(
     functionName: "approve",
     args: [spender, approveAmount],
   });
+  await publicClient.waitForTransactionReceipt({ hash: txHash });
   return { approved: true, txHash };
 }
 

@@ -10,13 +10,22 @@ const SPENDER: Address = "0x827922686190790b37229fd06084350E74485b72";
 const OWNER: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
 
 type ApproveCall = { functionName: string; amount: bigint };
-type MockContext = { ctx: ChainContext; approves: ApproveCall[] };
+type WaitCall = { hash: `0x${string}` };
+type MockContext = {
+  ctx: ChainContext;
+  approves: ApproveCall[];
+  waits: WaitCall[];
+};
 
 function buildMockContext(currentAllowance: bigint): MockContext {
   const approves: ApproveCall[] = [];
+  const waits: WaitCall[] = [];
   const publicClient = {
     readContract: vi.fn(async () => currentAllowance),
-    waitForTransactionReceipt: vi.fn(async () => ({})),
+    waitForTransactionReceipt: vi.fn(async (p: { hash: `0x${string}` }) => {
+      waits.push({ hash: p.hash });
+      return {};
+    }),
   } as unknown as ChainContext["publicClient"];
 
   const walletClient = {
@@ -30,7 +39,7 @@ function buildMockContext(currentAllowance: bigint): MockContext {
   } as unknown as ChainContext["walletClient"];
 
   const ctx = { publicClient, walletClient } as unknown as ChainContext;
-  return { ctx, approves };
+  return { ctx, approves, waits };
 }
 
 describe("ensureAllowance", () => {
@@ -82,6 +91,17 @@ describe("ensureAllowance", () => {
     expect(approves[0]!.functionName).toBe("approve");
     expect(approves[0]!.amount).toBe(0n);
     expect(approves[1]!.amount).toBe(1_000n);
+  });
+
+  it("should wait for the final approve receipt before returning", async () => {
+    const { ctx, waits } = buildMockContext(0n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+    });
+    expect(result.txHash).toBe("0xabc");
+    expect(waits).toContainEqual({ hash: "0xabc" });
   });
 
   it("should return not-approved and not write when amount is zero", async () => {
