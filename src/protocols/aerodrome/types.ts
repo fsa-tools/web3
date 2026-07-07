@@ -25,6 +25,7 @@ export type DecreaseOperationParams = {
   liquidity: bigint;
   amount0Min?: bigint;
   amount1Min?: bigint;
+  slippageBps?: number;
   deadline?: bigint;
   gasOptions?: GasOptions;
 };

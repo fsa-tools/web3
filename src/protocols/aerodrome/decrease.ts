@@ -1,5 +1,7 @@
 import { AERODROME_NPM_ABI } from "../../abis/aerodrome-npm.js";
+import { applySlippage } from "../../math/slippage.js";
 import { validateAddress } from "../../utils/address.js";
+import { withRetry } from "../../utils/retry.js";
 import type { ChainContext } from "../../context.js";
 import type { DecreaseOperationParams, DecreaseResult } from "./types.js";
 
@@ -23,6 +25,38 @@ export async function decreaseLiquidity(
     params.deadline ??
     BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_SECONDS;
 
+  let derivedAmount0Min: bigint | undefined;
+  let derivedAmount1Min: bigint | undefined;
+
+  if (
+    params.slippageBps !== undefined &&
+    (params.amount0Min === undefined || params.amount1Min === undefined)
+  ) {
+    const { result } = await withRetry(() =>
+      publicClient.simulateContract({
+        address: params.npmAddress,
+        abi: AERODROME_NPM_ABI,
+        functionName: "decreaseLiquidity",
+        args: [
+          {
+            tokenId: params.nftId,
+            liquidity: params.liquidity,
+            amount0Min: 0n,
+            amount1Min: 0n,
+            deadline,
+          },
+        ],
+        account: walletClient.account,
+      }),
+    );
+    const [estimatedAmount0, estimatedAmount1] = result;
+    derivedAmount0Min = applySlippage(estimatedAmount0, params.slippageBps);
+    derivedAmount1Min = applySlippage(estimatedAmount1, params.slippageBps);
+  }
+
+  const amount0Min = params.amount0Min ?? derivedAmount0Min ?? 0n;
+  const amount1Min = params.amount1Min ?? derivedAmount1Min ?? 0n;
+
   const txHash = await walletClient.writeContract({
     address: params.npmAddress,
     abi: AERODROME_NPM_ABI,
@@ -31,8 +65,8 @@ export async function decreaseLiquidity(
       {
         tokenId: params.nftId,
         liquidity: params.liquidity,
-        amount0Min: params.amount0Min ?? 0n,
-        amount1Min: params.amount1Min ?? 0n,
+        amount0Min,
+        amount1Min,
         deadline,
       },
     ],
