@@ -39,8 +39,12 @@ function approveTx(
 }
 
 export function planMint(params: PlanMintParams): TxRequest[] {
-  const amount0Min = applySlippage(params.amount0Desired, params.slippageBps);
-  const amount1Min = applySlippage(params.amount1Desired, params.slippageBps);
+  const amount0Min =
+    params.amount0Min ??
+    applySlippage(params.amount0Desired, params.slippageBps);
+  const amount1Min =
+    params.amount1Min ??
+    applySlippage(params.amount1Desired, params.slippageBps);
   const mint: TxRequest = {
     label: "mint Uniswap V3 LP position",
     to: params.npmAddress,

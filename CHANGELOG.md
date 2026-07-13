@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.7.0 — 2026-07-13
+
+### Added
+- `mintPosition` (Aerodrome e Uniswap V3) aceita `amount0Min`/`amount1Min` explícitos, como
+  `decreaseLiquidity` já fazia. Quando ausentes, seguem derivados do `slippageBps` — comportamento
+  inalterado para quem não passa os mins.
+
+  **Porquê:** derivar o min do `amountDesired` amarra o min ao preço do instante em que os amounts
+  foram calculados. O pool consome os tokens na proporção do preço corrente dentro do range, então
+  qualquer drift de preço até a TX ser minada encolhe uma das pernas abaixo do seu min e o NPM
+  reverte com `PSC` (price slippage check) — 1 tick de drift basta num range estreito. Com os mins
+  explícitos, quem conhece a banda de preço tolerada calcula os mins nela (à la
+  `mintAmountsWithSlippage` do Uniswap SDK) e passa prontos.
+
 ## 3.6.1 — 2026-07-07
 
 ### Fixed

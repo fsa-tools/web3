@@ -14,6 +14,13 @@ export type MintOperationParams = {
   amount1Desired: bigint;
   sqrtPriceX96: bigint;
   slippageBps: number;
+  // Mins explicitos vencem o slippageBps. Deriva-los do desired amarra o min ao
+  // preco do momento em que os amounts foram calculados: como o pool consome os
+  // tokens na proporcao do preco corrente, qualquer drift ate a TX ser minada
+  // encolhe uma das pernas abaixo do seu min e o NPM reverte com PSC. Quem sabe
+  // a banda de preco tolerada calcula os mins nela e passa aqui.
+  amount0Min?: bigint;
+  amount1Min?: bigint;
   deadline?: bigint;
   gasOptions?: GasOptions;
   approvalMode?: ApprovalMode;

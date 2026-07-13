@@ -45,8 +45,12 @@ export async function mintPosition(
     params.deadline ??
     BigInt(Math.floor(Date.now() / 1000)) + DEFAULT_DEADLINE_SECONDS;
 
-  const amount0Min = applySlippage(params.amount0Desired, params.slippageBps);
-  const amount1Min = applySlippage(params.amount1Desired, params.slippageBps);
+  const amount0Min =
+    params.amount0Min ??
+    applySlippage(params.amount0Desired, params.slippageBps);
+  const amount1Min =
+    params.amount1Min ??
+    applySlippage(params.amount1Desired, params.slippageBps);
 
   const txHash = await walletClient.writeContract({
     address: params.npmAddress,

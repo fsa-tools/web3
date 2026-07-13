@@ -13,6 +13,9 @@ export type MintOperationParams = {
   amount0Desired: bigint;
   amount1Desired: bigint;
   slippageBps: number;
+  // Mins explicitos vencem o slippageBps — ver nota em aerodrome/types.ts (PSC).
+  amount0Min?: bigint;
+  amount1Min?: bigint;
   deadline?: bigint;
   gasOptions?: GasOptions;
   approvalMode?: ApprovalMode;
