@@ -96,5 +96,5 @@ export async function mintPosition(
     amount1 = BigInt("0x" + data.slice(WORD * 2, WORD * 3));
   }
 
-  return { txHash, nftId, amount0, amount1, gasUsed: receipt.gasUsed };
+  return { txHash, nftId, amount0, amount1, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
 }

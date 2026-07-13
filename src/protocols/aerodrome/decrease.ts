@@ -90,5 +90,5 @@ export async function decreaseLiquidity(
     amount1 = BigInt("0x" + data.slice(WORD * 2, WORD * 3));
   }
 
-  return { txHash, amount0, amount1, gasUsed: receipt.gasUsed };
+  return { txHash, amount0, amount1, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
 }

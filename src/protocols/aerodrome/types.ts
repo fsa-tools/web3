@@ -55,6 +55,9 @@ export type PositionResult = {
   amount0: bigint;
   amount1: bigint;
   gasUsed: bigint;
+  // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
+  // calcular o custo em USD (+1 RPC por trade).
+  effectiveGasPrice: bigint;
 };
 
 export type DecreaseResult = {
@@ -62,6 +65,9 @@ export type DecreaseResult = {
   amount0: bigint;
   amount1: bigint;
   gasUsed: bigint;
+  // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
+  // calcular o custo em USD (+1 RPC por trade).
+  effectiveGasPrice: bigint;
 };
 
 export type CollectResult = {
@@ -69,11 +75,17 @@ export type CollectResult = {
   amount0: bigint;
   amount1: bigint;
   gasUsed: bigint;
+  // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
+  // calcular o custo em USD (+1 RPC por trade).
+  effectiveGasPrice: bigint;
 };
 
 export type BurnResult = {
   txHash: Hash;
   gasUsed: bigint;
+  // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
+  // calcular o custo em USD (+1 RPC por trade).
+  effectiveGasPrice: bigint;
 };
 
 export type SwapOperationParams = {
@@ -91,6 +103,9 @@ export type SwapResult = {
   amountOut: bigint;
   txHash: Hash;
   gasUsed: bigint;
+  // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
+  // calcular o custo em USD (+1 RPC por trade).
+  effectiveGasPrice: bigint;
 };
 
 export type QuoteOperationParams = {

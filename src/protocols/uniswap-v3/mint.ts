@@ -84,5 +84,6 @@ export async function mintPosition(
     amount1: event.args.amount1,
     txHash,
     gasUsed: receipt.gasUsed,
+    effectiveGasPrice: receipt.effectiveGasPrice,
   };
 }

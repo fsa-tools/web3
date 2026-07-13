@@ -103,5 +103,6 @@ export async function swapExactInputSingle(
     amountOut: balanceAfter - balanceBefore,
     txHash: hash,
     gasUsed: receipt.gasUsed,
+    effectiveGasPrice: receipt.effectiveGasPrice,
   };
 }

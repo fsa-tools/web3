@@ -48,5 +48,5 @@ export async function collectFees(
     amount1 = BigInt("0x" + data.slice(WORD, WORD * 2));
   }
 
-  return { txHash, amount0, amount1, gasUsed: receipt.gasUsed };
+  return { txHash, amount0, amount1, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
 }

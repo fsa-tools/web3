@@ -25,5 +25,5 @@ export async function burnPosition(
   const [burnTx] = planBurnPosition({ ...params, npmAddress });
   const { txHash, receipt } = await sendTxRequest(ctx, burnTx!, gasOptions);
 
-  return { txHash, gasUsed: receipt.gasUsed };
+  return { txHash, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
 }

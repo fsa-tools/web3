@@ -13,6 +13,7 @@ const OWNER: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
 
 const AMOUNT0_DESIRED = 1_000_000_000_000_000_000n;
 const AMOUNT1_DESIRED = 2_000_000_000n;
+const RECEIPT_GAS_PRICE = 1_234_567n;
 
 type MintArgs = Record<string, unknown>;
 
@@ -21,7 +22,11 @@ function buildMockContext(): {
   mintArgs: () => MintArgs;
 } {
   const captured: MintArgs[] = [];
-  const receipt = { gasUsed: 100_000n, logs: [] };
+  const receipt = {
+    gasUsed: 100_000n,
+    effectiveGasPrice: RECEIPT_GAS_PRICE,
+    logs: [],
+  };
 
   const publicClient = {
     chain: { id: 8453 },
@@ -59,6 +64,16 @@ const aerodromeParams = {
   slippageBps: 50,
   deadline: 1_900_000_000n,
 };
+
+describe("mintPosition (aerodrome) — effectiveGasPrice do receipt", () => {
+  it("propaga effectiveGasPrice para o chamador nao ter que rebuscar o receipt", async () => {
+    const { ctx } = buildMockContext();
+
+    const result = await mintAerodrome(ctx, aerodromeParams);
+
+    expect(result.effectiveGasPrice).toBe(RECEIPT_GAS_PRICE);
+  });
+});
 
 describe("mintPosition (aerodrome) — amount0Min/amount1Min explicitos", () => {
   it("usa os mins explicitos quando fornecidos, ignorando o slippageBps", async () => {

@@ -44,5 +44,6 @@ export async function collectFees(
     amount1: event.args.amount1,
     txHash,
     gasUsed: receipt.gasUsed,
+    effectiveGasPrice: receipt.effectiveGasPrice,
   };
 }

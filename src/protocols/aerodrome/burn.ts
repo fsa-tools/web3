@@ -24,5 +24,5 @@ export async function burnPosition(
     confirmations: 2,
   });
 
-  return { txHash, gasUsed: receipt.gasUsed };
+  return { txHash, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.8.0 — 2026-07-13
+
+### Added
+- Todos os resultados de operação que já carregavam `gasUsed` agora carregam também `effectiveGasPrice`
+  (mint, decrease, collect, burn, swap — Aerodrome e Uniswap V3). O receipt já estava em mãos; sem isso o
+  chamador precisava **rebuscar o receipt** só para calcular o custo em USD — +1 RPC por trade.
+
 ## 3.7.0 — 2026-07-13
 
 ### Added
