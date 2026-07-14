@@ -1,4 +1,4 @@
-import type { Address, Hash } from "viem";
+import type { Address, Hash, TransactionReceipt } from "viem";
 import { ERC20_ABI } from "../abis/erc20.js";
 import type { ChainContext } from "../context.js";
 import { validateAddress } from "./address.js";
@@ -17,6 +17,7 @@ export type EnsureAllowanceParams = {
 export type AllowanceResult = {
   approved: boolean;
   txHash?: Hash;
+  receipts: TransactionReceipt[];
 };
 
 export type GetBalanceParams = {
@@ -36,7 +37,7 @@ export async function ensureAllowance(
   validateAddress(token);
   validateAddress(spender);
   if (amount === 0n) {
-    return { approved: false };
+    return { approved: false, receipts: [] };
   }
   const currentAllowance = await publicClient.readContract({
     address: token,
@@ -45,8 +46,9 @@ export async function ensureAllowance(
     args: [walletClient.account.address, spender],
   });
   if (currentAllowance >= amount) {
-    return { approved: false };
+    return { approved: false, receipts: [] };
   }
+  const receipts: TransactionReceipt[] = [];
   if (currentAllowance > 0n) {
     const resetHash = await walletClient.writeContract({
       address: token,
@@ -54,10 +56,11 @@ export async function ensureAllowance(
       functionName: "approve",
       args: [spender, 0n],
     });
-    await publicClient.waitForTransactionReceipt({
+    const resetReceipt = await publicClient.waitForTransactionReceipt({
       hash: resetHash,
       confirmations: 2,
     });
+    receipts.push(resetReceipt);
   }
   const approveAmount =
     (params.approvalMode ?? "unlimited") === "exact" ? amount : MAX_UINT256;
@@ -67,8 +70,11 @@ export async function ensureAllowance(
     functionName: "approve",
     args: [spender, approveAmount],
   });
-  await publicClient.waitForTransactionReceipt({ hash: txHash });
-  return { approved: true, txHash };
+  const finalReceipt = await publicClient.waitForTransactionReceipt({
+    hash: txHash,
+  });
+  receipts.push(finalReceipt);
+  return { approved: true, txHash, receipts };
 }
 
 export async function getBalance(

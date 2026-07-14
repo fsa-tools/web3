@@ -20,11 +20,16 @@ type MockContext = {
 function buildMockContext(currentAllowance: bigint): MockContext {
   const approves: ApproveCall[] = [];
   const waits: WaitCall[] = [];
+  let hashCounter = 0;
   const publicClient = {
     readContract: vi.fn(async () => currentAllowance),
     waitForTransactionReceipt: vi.fn(async (p: { hash: `0x${string}` }) => {
       waits.push({ hash: p.hash });
-      return {};
+      return {
+        transactionHash: p.hash,
+        gasUsed: 50_000n,
+        effectiveGasPrice: 1_000n,
+      };
     }),
   } as unknown as ChainContext["publicClient"];
 
@@ -33,7 +38,8 @@ function buildMockContext(currentAllowance: bigint): MockContext {
     writeContract: vi.fn(
       async (p: { functionName: string; args: readonly [Address, bigint] }) => {
         approves.push({ functionName: p.functionName, amount: p.args[1] });
-        return "0xabc" as `0x${string}`;
+        hashCounter += 1;
+        return `0x${hashCounter}` as `0x${string}`;
       },
     ),
   } as unknown as ChainContext["walletClient"];
@@ -100,8 +106,8 @@ describe("ensureAllowance", () => {
       spender: SPENDER,
       amount: 1_000n,
     });
-    expect(result.txHash).toBe("0xabc");
-    expect(waits).toContainEqual({ hash: "0xabc" });
+    expect(result.txHash).toBe("0x1");
+    expect(waits).toContainEqual({ hash: "0x1" });
   });
 
   it("should return not-approved and not write when amount is zero", async () => {
@@ -124,5 +130,49 @@ describe("ensureAllowance", () => {
     });
     expect(result.approved).toBe(false);
     expect(approves).toHaveLength(0);
+  });
+
+  it("should return empty receipts when amount is zero", async () => {
+    const { ctx } = buildMockContext(0n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 0n,
+    });
+    expect(result.receipts).toEqual([]);
+  });
+
+  it("should return empty receipts when allowance is greater than or equal to amount", async () => {
+    const { ctx } = buildMockContext(2_000n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+    });
+    expect(result.receipts).toEqual([]);
+  });
+
+  it("should return a single receipt for the final approve when allowance is zero", async () => {
+    const { ctx } = buildMockContext(0n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+    });
+    expect(result.receipts).toHaveLength(1);
+    expect(result.receipts[0]!.transactionHash).toBe("0x1");
+  });
+
+  it("should return reset and final receipts in order when allowance is positive and below amount", async () => {
+    const { ctx } = buildMockContext(5n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+      approvalMode: "exact",
+    });
+    expect(result.receipts).toHaveLength(2);
+    expect(result.receipts[0]!.transactionHash).toBe("0x1");
+    expect(result.receipts[1]!.transactionHash).toBe("0x2");
   });
 });
