@@ -36,18 +36,19 @@ export async function mintPosition(
   validateAddress(params.token0);
   validateAddress(params.token1);
 
-  await ensureAllowance(ctx, {
+  const allowance0 = await ensureAllowance(ctx, {
     token: params.token0,
     spender: npmAddress,
     amount: params.amount0Desired,
     approvalMode: params.approvalMode,
   });
-  await ensureAllowance(ctx, {
+  const allowance1 = await ensureAllowance(ctx, {
     token: params.token1,
     spender: npmAddress,
     amount: params.amount1Desired,
     approvalMode: params.approvalMode,
   });
+  const approvalReceipts = [...allowance0.receipts, ...allowance1.receipts];
 
   const effectiveDeadline =
     params.deadline ??
@@ -85,5 +86,6 @@ export async function mintPosition(
     txHash,
     gasUsed: receipt.gasUsed,
     effectiveGasPrice: receipt.effectiveGasPrice,
+    approvalReceipts,
   };
 }
