@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.9.0 — 2026-07-13
+
+### Added
+- `PositionResult` (`mintPosition`) e `SwapResult` (`swapExactInputSingle`) — Aerodrome e Uniswap V3 —
+  agora carregam `approvalReceipts: TransactionReceipt[]`: os receipts das txs de approve ERC20 disparadas
+  internamente via `ensureAllowance` antes da operação principal. Sempre presente (`[]` quando nenhum
+  approve foi necessário). As demais operações (`decreaseLiquidity`, `collectFees`, `burnPosition`,
+  `quoteExactInputSingle`) não aprovam nada e ficaram inalteradas.
+- `AllowanceResult` (de `ensureAllowance`) carrega `receipts: TransactionReceipt[]` no mesmo formato.
+  O campo `txHash?` existente continua intacto — mudança não-breaking.
+- Como efeito colateral: `ensureAllowance` pode emitir **duas** txs — o reset-para-zero (`approve(0)`,
+  quando a allowance corrente é `> 0` mas `< amount`) e o approve final. O hash do reset não era exposto
+  em lugar nenhum; agora o receipt dele vem no array, na ordem de envio.
+
+  **Porquê:** os approves gastam gás, mas os results só carregavam dados da tx principal — o consumidor
+  nem sabia que os approves existiram, e o custo de entrada que ele calculava subestimava o gás, com viés
+  sistemático e sempre para baixo. `ensureAllowance` já aguarda o receipt de cada tx (desde 3.6.1) e os
+  descartava; devolvê-los custa **zero RPC extra** e entrega `gasUsed`, `effectiveGasPrice` e, na
+  Base/OP-stack, `l1Fee`. Devolver só os hashes forçaria o chamador a rebuscar cada receipt — exatamente
+  o custo que a 3.8.0 acabou de eliminar para a tx principal. Ressalva: o tipo `TransactionReceipt` do
+  viem **não** declara `l1Fee` — o campo chega em runtime pelo chain formatter da Base, então quem
+  precisar dele na OP-stack faz um cast. Decisão consciente: tipar o receipt pela chain vazaria generics
+  para toda a API pública da lib.
+
 ## 3.8.0 — 2026-07-13
 
 ### Added
