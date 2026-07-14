@@ -50,7 +50,7 @@ export async function swapExactInputSingle(
   const { publicClient, walletClient } = ctx;
   const owner = walletClient.account.address;
 
-  await ensureAllowance(ctx, {
+  const allowance = await ensureAllowance(ctx, {
     token: tokenIn,
     spender: swapRouter,
     amount: amountIn,
@@ -104,5 +104,6 @@ export async function swapExactInputSingle(
     txHash: hash,
     gasUsed: receipt.gasUsed,
     effectiveGasPrice: receipt.effectiveGasPrice,
+    approvalReceipts: allowance.receipts,
   };
 }

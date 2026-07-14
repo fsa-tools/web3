@@ -27,18 +27,19 @@ export async function mintPosition(
   validateAddress(params.token0);
   validateAddress(params.token1);
 
-  await ensureAllowance(ctx, {
+  const allowance0 = await ensureAllowance(ctx, {
     token: params.token0,
     spender: params.npmAddress,
     amount: params.amount0Desired,
     approvalMode: params.approvalMode,
   });
-  await ensureAllowance(ctx, {
+  const allowance1 = await ensureAllowance(ctx, {
     token: params.token1,
     spender: params.npmAddress,
     amount: params.amount1Desired,
     approvalMode: params.approvalMode,
   });
+  const approvalReceipts = [...allowance0.receipts, ...allowance1.receipts];
 
   const { publicClient, walletClient } = ctx;
   const deadline =
@@ -96,5 +97,13 @@ export async function mintPosition(
     amount1 = BigInt("0x" + data.slice(WORD * 2, WORD * 3));
   }
 
-  return { txHash, nftId, amount0, amount1, gasUsed: receipt.gasUsed, effectiveGasPrice: receipt.effectiveGasPrice };
+  return {
+    txHash,
+    nftId,
+    amount0,
+    amount1,
+    gasUsed: receipt.gasUsed,
+    effectiveGasPrice: receipt.effectiveGasPrice,
+    approvalReceipts,
+  };
 }

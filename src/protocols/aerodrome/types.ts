@@ -1,4 +1,4 @@
-import type { Address, Hash } from "viem";
+import type { Address, Hash, TransactionReceipt } from "viem";
 import type { GasOptions } from "../../utils/gas.js";
 import type { ApprovalMode } from "../../utils/erc20.js";
 
@@ -58,6 +58,10 @@ export type PositionResult = {
   // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
   // calcular o custo em USD (+1 RPC por trade).
   effectiveGasPrice: bigint;
+  // receipts dos approves de token0/token1 disparados internamente — sem isso
+  // o chamador subestima o gas gasto na entrada, pois essas txs nao aparecem
+  // em lugar nenhum. Vazio quando a allowance ja cobria o amount.
+  approvalReceipts: TransactionReceipt[];
 };
 
 export type DecreaseResult = {
@@ -106,6 +110,10 @@ export type SwapResult = {
   // effectiveGasPrice do receipt — evita o chamador rebuscar o receipt so pra
   // calcular o custo em USD (+1 RPC por trade).
   effectiveGasPrice: bigint;
+  // receipt do approve de tokenIn disparado internamente — sem isso o
+  // chamador subestima o gas gasto na entrada, pois essa tx nao aparece em
+  // lugar nenhum. Vazio quando a allowance ja cobria o amountIn.
+  approvalReceipts: TransactionReceipt[];
 };
 
 export type QuoteOperationParams = {
