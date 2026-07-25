@@ -1,3 +1,4 @@
+import { isAddressEqual } from "viem";
 import type { Address, Hex } from "viem";
 import { POOL_ABI } from "../abis/pool.js";
 import type { ChainContext } from "../context.js";
@@ -171,14 +172,25 @@ export async function getEthPriceUsd(
   params: GetEthPriceParams,
 ): Promise<number> {
   const abi = params.poolAbi ?? POOL_ABI;
-  const result = (await ctx.publicClient.readContract({
-    address: params.wethUsdcPoolAddress,
-    abi,
-    functionName: "slot0",
-  })) as unknown as [bigint, ...unknown[]];
+  const [result, token0] = await Promise.all([
+    ctx.publicClient.readContract({
+      address: params.wethUsdcPoolAddress,
+      abi,
+      functionName: "slot0",
+    }) as unknown as Promise<[bigint, ...unknown[]]>,
+    ctx.publicClient.readContract({
+      address: params.wethUsdcPoolAddress,
+      abi: POOL_ABI,
+      functionName: "token0",
+    }) as unknown as Promise<Address>,
+  ]);
   const sqrtPriceX96 = result[0];
   const Q96 = 2n ** 96n;
   const price = Number(sqrtPriceX96 * sqrtPriceX96) / Number(Q96 * Q96);
+  /** |dec(WETH) - dec(USDC)| = 12; vale nas duas orientações do pool. */
   const DECIMALS_ADJUSTMENT = 1e12;
-  return price * DECIMALS_ADJUSTMENT;
+  const isWethToken0 = isAddressEqual(token0, ctx.addresses.weth);
+  return isWethToken0
+    ? price * DECIMALS_ADJUSTMENT
+    : DECIMALS_ADJUSTMENT / price;
 }
