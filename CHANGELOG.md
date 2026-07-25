@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.9.1 — 2026-07-25
+
+### Fixed
+- `getEthPriceUsd` (`src/utils/gas.ts`) agora lê `token0()` do pool e inverte o preço quando WETH é `token1`,
+  em vez de assumir a orientação da Base (WETH=`token0`, USDC=`token1`). Em chain cujo pool WETH/USDC ordena
+  USDC primeiro — Ethereum mainnet, `0x88e6A0c2…5640` — a fórmula antiga devolvia `priceRaw × 1e12 ≈ 5.38e20`
+  em vez de ~US$1.9e3, inflando `equity`/`availableUSD` do consumidor em ~1e17× e fazendo gates de estratégia
+  decidirem sobre capital fictício. A comparação usa `isAddressEqual` contra `ctx.addresses.weth` — case-insensitive,
+  porque as constantes de endereço misturam checksummed e lowercase. O ajuste de decimais segue `1e12` nas duas
+  orientações (|dec(WETH) − dec(USDC)| = 12), mudando de multiplicador para numerador quando invertido.
+
+  **Ressalva para consumidores:** a chamada passa a emitir **dois** reads (`slot0` + `token0`, em paralelo via
+  `Promise.all`) e exige que o contrato do pool exponha `token0()` — o que vale para Uniswap V3 e Aerodrome
+  Slipstream. O `token0()` é lido sempre com o `POOL_ABI` interno, então um `poolAbi` de caller que declare
+  apenas `slot0` continua funcionando. (ref #8)
+
 ## 3.9.0 — 2026-07-13
 
 ### Added
