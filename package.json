@@ -59,6 +59,10 @@
     "./context": {
       "import": "./dist/src/context.js",
       "types": "./dist/src/context.d.ts"
+    },
+    "./simulate": {
+      "import": "./dist/src/simulate/index.js",
+      "types": "./dist/src/simulate/index.d.ts"
     }
   },
   "scripts": {

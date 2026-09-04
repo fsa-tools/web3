@@ -8,3 +8,10 @@ export * as aave from "./src/protocols/aave/index.js";
 export type { TxRequest } from "./src/tx/index.js";
 export { isTxRequest, sendTxRequest } from "./src/tx/index.js";
 export type { SendTxResult } from "./src/tx/index.js";
+export { simulateTxRequests, decodeRevertReason } from "./src/simulate/index.js";
+export type {
+  AssetDiff,
+  SimulateTxRequestsOptions,
+  SimulateTxRequestsResult,
+  TxSimulationResult,
+} from "./src/simulate/index.js";
