@@ -10,3 +10,5 @@ iter=1 passo=4 leva=#9,#10,#11,#12 ts=2026-09-04T22:44:00Z nota=mail: worker_don
 iter=1 passo=5 leva=#12 ts=2026-09-04T22:44:00Z nota=gate #12 -> MiniMax-M3 no worktree iss-12 (ctx_77fa125a7160)
 iter=1 passo=5 leva=#12 ts=2026-09-04T22:46:36Z nota=qa:passed no forge (MiniMax); achado: report-12.md commitado — prevencao enviada aos 3
 iter=1 passo=4 leva=#9 ts=2026-09-04T22:46:36Z nota=seams S1-S4 aprovados p/ criterio de aceite; (a) sem planSupplyAuto (b) Base no smoke em escopo (c) ADDRESSES[8453] vai ao report
+iter=1 passo=4 leva=#11 ts=2026-09-04T22:48:11Z nota=worker_done #11 (HEAD 17e3575, 201/36, report fora do commit — correcao pegou)
+iter=1 passo=5 leva=#11 ts=2026-09-04T22:48:11Z nota=gate #11 -> MiniMax (ctx_1b53b1e07031); brief marca caminho de capital
