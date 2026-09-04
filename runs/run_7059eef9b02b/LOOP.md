@@ -8,3 +8,5 @@ iter=1 passo=3 leva=#9,#10,#11,#12 ts=2026-09-04T22:40:31Z nota=4 dispatch input
 iter=1 passo=4 leva=#9,#10,#11,#12 ts=2026-09-04T22:40:31Z nota=watcher armado; revisor do gate = MiniMax-M3 (sem 29pct)
 iter=1 passo=4 leva=#9,#10,#11,#12 ts=2026-09-04T22:44:00Z nota=mail: worker_done #12, question #9 (/implement bloqueada) -> corrigido metodo p/ tdd nos 3
 iter=1 passo=5 leva=#12 ts=2026-09-04T22:44:00Z nota=gate #12 -> MiniMax-M3 no worktree iss-12 (ctx_77fa125a7160)
+iter=1 passo=5 leva=#12 ts=2026-09-04T22:46:36Z nota=qa:passed no forge (MiniMax); achado: report-12.md commitado — prevencao enviada aos 3
+iter=1 passo=4 leva=#9 ts=2026-09-04T22:46:36Z nota=seams S1-S4 aprovados p/ criterio de aceite; (a) sem planSupplyAuto (b) Base no smoke em escopo (c) ADDRESSES[8453] vai ao report
