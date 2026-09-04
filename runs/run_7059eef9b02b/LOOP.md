@@ -16,3 +16,5 @@ iter=1 passo=5 leva=#11 ts=2026-09-04T22:50:22Z nota=qa:passed no forge; revisor
 iter=1 passo=4 leva=#10 ts=2026-09-04T22:52:49Z nota=worker_done #10 (abbf940, 207/37, report fora do commit); package.json so exports ./simulate — em escopo
 iter=1 passo=5 leva=#10 ts=2026-09-04T22:52:49Z nota=gate #10 -> MiniMax (ctx_8737047434af); decisao central = gap health-factor e escopo ou blocker
 iter=1 passo=5 leva=#10 ts=2026-09-04T22:55:01Z nota=qa:passed; gap health-factor julgado follow-up nao-bloqueante -> candidato a debito
+iter=1 passo=5 leva=#9 ts=2026-09-04T23:00:57Z nota=qa:passed — leva 4/4 aprovada, zero qa:blocked
+iter=1 passo=6 leva=#9,#10,#11,#12 ts=2026-09-04T23:00:57Z nota=colheita despachada (sonnet/medium, 4 reports + vereditos)
