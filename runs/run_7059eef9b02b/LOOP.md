@@ -18,3 +18,7 @@ iter=1 passo=5 leva=#10 ts=2026-09-04T22:52:49Z nota=gate #10 -> MiniMax (ctx_87
 iter=1 passo=5 leva=#10 ts=2026-09-04T22:55:01Z nota=qa:passed; gap health-factor julgado follow-up nao-bloqueante -> candidato a debito
 iter=1 passo=5 leva=#9 ts=2026-09-04T23:00:57Z nota=qa:passed — leva 4/4 aprovada, zero qa:blocked
 iter=1 passo=6 leva=#9,#10,#11,#12 ts=2026-09-04T23:00:57Z nota=colheita despachada (sonnet/medium, 4 reports + vereditos)
+iter=1 passo=6.2 leva=#9,#10,#11,#12 ts=2026-09-04T22:20:00Z nota=sessao filha (gate de contexto); 4 branches mergeadas em main --no-ff, sem conflito
+iter=1 passo=6.2 leva=#9,#10,#11,#12 ts=2026-09-04T22:21:00Z nota=suite pos-merge 232/233 -> falha cruzada: fitness test de #11 acusa aave-errors.ts de #10 por JSDoc; fix afc1e10, 233/233 verde
+iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:22:00Z nota=drain; worktrees iss-14/iss-17 criados de main mergeada; preflight claude 54%/6%, grok EXPIRADO, minimax 30%
+iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:26:00Z nota=dispatch ok: #14 sonnet/medium term_92bec60b, #17 sonnet/high term_6e0a4723 (teste novo => high pela tabela)
