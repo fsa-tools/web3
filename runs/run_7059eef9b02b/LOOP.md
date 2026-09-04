@@ -6,3 +6,5 @@ iter=1 passo=1.5 leva=#4,#5 ts=2026-09-04T22:40:31Z nota=triage N=6 RA=4; #4/#5 
 iter=1 passo=2 leva=#9,#10,#11,#12 ts=2026-09-04T22:40:31Z nota=fronteira 4, 0 bloqueadas, 0 HITL; advisor=n/a (sem flag)
 iter=1 passo=3 leva=#9,#10,#11,#12 ts=2026-09-04T22:40:31Z nota=4 dispatch input_accepted; opus/high #9 #11, sonnet/high #10, sonnet/medium #12
 iter=1 passo=4 leva=#9,#10,#11,#12 ts=2026-09-04T22:40:31Z nota=watcher armado; revisor do gate = MiniMax-M3 (sem 29pct)
+iter=1 passo=4 leva=#9,#10,#11,#12 ts=2026-09-04T22:44:00Z nota=mail: worker_done #12, question #9 (/implement bloqueada) -> corrigido metodo p/ tdd nos 3
+iter=1 passo=5 leva=#12 ts=2026-09-04T22:44:00Z nota=gate #12 -> MiniMax-M3 no worktree iss-12 (ctx_77fa125a7160)
