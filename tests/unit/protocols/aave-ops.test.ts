@@ -4,6 +4,11 @@ import { supply } from "../../../src/protocols/aave/supply.js";
 import { withdraw } from "../../../src/protocols/aave/withdraw.js";
 import { AAVE_POOL_ABI } from "../../../src/abis/aave-pool.js";
 import type { ChainContext } from "../../../src/context.js";
+import {
+  createFakeProvider,
+  createInjectedWalletClient,
+  EXTENSION_ADDRESS,
+} from "../_helpers/eip1193.js";
 
 const POOL: Address = "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5";
 const ASSET: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
@@ -57,5 +62,46 @@ describe("aave ops — plan + send", () => {
       decodeFunctionData({ abi: AAVE_POOL_ABI, data: sent[0]!.data })
         .functionName,
     ).toBe("withdraw");
+  });
+});
+
+describe("aave supply com walletClient injetado (EIP-1193, sem privateKey)", () => {
+  function injectedCtx() {
+    const provider = createFakeProvider();
+    const ctx = {
+      publicClient: {
+        chain: { id: 8453 },
+        waitForTransactionReceipt: vi.fn(async () => ({
+          gasUsed: 200_000n,
+          logs: [],
+        })),
+      },
+      walletClient: createInjectedWalletClient(provider),
+      addresses: { aave: { pool: POOL }, weth: OWNER },
+    } as unknown as ChainContext;
+    return { ctx, provider };
+  }
+
+  it("delega o supply ao provider da extensão, sem privateKey no context", async () => {
+    const { ctx, provider } = injectedCtx();
+
+    const result = await supply(ctx, {
+      asset: ASSET,
+      amount: 5_000_000_000n,
+    });
+
+    expect(result.txHash).toBe(`0x${"11".repeat(32)}`);
+    const sendCall = provider.requests.find(
+      (r) => r.method === "eth_sendTransaction",
+    );
+    expect(sendCall).toBeDefined();
+    const [sent] = sendCall?.params as [
+      { from: string; to: string; data: `0x${string}` },
+    ];
+    expect(sent.from.toLowerCase()).toBe(EXTENSION_ADDRESS.toLowerCase());
+    expect(sent.to.toLowerCase()).toBe(POOL.toLowerCase());
+    expect(
+      decodeFunctionData({ abi: AAVE_POOL_ABI, data: sent.data }).functionName,
+    ).toBe("supply");
   });
 });
