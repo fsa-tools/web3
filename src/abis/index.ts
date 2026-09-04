@@ -4,6 +4,8 @@ export { NPM_ABI } from "./npm.js";
 export { POOL_ABI, POOL_SLOT0_ABI } from "./pool.js";
 export { AERODROME_NPM_ABI, AERODROME_POOL_ABI } from "./aerodrome-npm.js";
 export { AAVE_POOL_ABI } from "./aave-pool.js";
+export { AAVE_ERROR_CODES } from "./aave-errors.js";
+export type { AaveErrorEntry } from "./aave-errors.js";
 export { SWAP_ROUTER_ABI } from "./swap-router.js";
 export { QUOTER_V2_ABI } from "./quoter.js";
 export { AERODROME_SWAP_ROUTER_ABI } from "./aerodrome-swap-router.js";
