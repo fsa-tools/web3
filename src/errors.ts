@@ -91,3 +91,16 @@ export class GasThresholdExceededError extends Error {
     this.retriesAttempted = params.retriesAttempted;
   }
 }
+
+export class PermitDomainMismatchError extends Error {
+  constructor(
+    public readonly token: Address,
+    public readonly versionsTried: readonly string[],
+  ) {
+    super(
+      `Could not reproduce DOMAIN_SEPARATOR of ${token} with EIP-712 domain version(s) ` +
+        `${versionsTried.join(", ")} — token domain is non-standard; pass an explicit version`,
+    );
+    this.name = "PermitDomainMismatchError";
+  }
+}

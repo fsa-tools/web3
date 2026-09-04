@@ -13,9 +13,17 @@ export type {
   GetUserAccountDataOperationParams,
   AccountData,
 } from "./types.js";
-export { planSupply, planWithdraw, planRepay } from "./plan.js";
+export {
+  planSupply,
+  planWithdraw,
+  planRepay,
+  planSupplyWithPermit,
+  planRepayWithPermit,
+} from "./plan.js";
 export type {
   PlanSupplyParams,
   PlanWithdrawParams,
   PlanRepayParams,
+  PlanSupplyWithPermitParams,
+  PlanRepayWithPermitParams,
 } from "./plan.js";

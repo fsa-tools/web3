@@ -61,3 +61,42 @@ export function loadChainContext(cfg: SmokeChainConfig): ChainContext | null {
     privateKey: pk as Hex,
   });
 }
+
+export type ReadOnlyChainConfig = {
+  chainId: number;
+  name: string;
+  rpcEnvVar: string;
+  tokens: {
+    usdc: `0x${string}`;
+    weth: `0x${string}`;
+  };
+};
+
+/**
+ * Base mainnet, só leitura — detecção de permit não assina nada.
+ * Deliberadamente FORA de `SMOKE_CHAINS`: aquele registry é varrido pelos
+ * smokes transacionais (aave, pool, utils), e Base é mainnet — uma entrada lá
+ * poria fundos reais em risco.
+ */
+export const PERMIT_READONLY_CHAINS: Record<string, ReadOnlyChainConfig> = {
+  base: {
+    chainId: 8453,
+    name: "base",
+    rpcEnvVar: "BASE_RPC",
+    tokens: {
+      usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      weth: "0x4200000000000000000000000000000000000006",
+    },
+  },
+};
+
+/** Contexto sem walletClient — só precisa do RPC, nunca de private key. */
+export function loadReadOnlyChainContext(
+  cfg: ReadOnlyChainConfig,
+): ChainContext | null {
+  const rpcRaw = process.env[cfg.rpcEnvVar];
+  if (!rpcRaw) return null;
+
+  const rpcUrls = rpcRaw.split(",").map((u) => u.trim());
+  return createChainContext({ chainId: cfg.chainId, rpcUrls });
+}

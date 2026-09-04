@@ -31,6 +31,14 @@ export {
   type AllowanceResult,
   type GetBalanceParams,
 } from "./erc20.js";
+export {
+  supportsPermit,
+  buildPermitTypedData,
+  type PermitSignature,
+  type PermitTypedData,
+  type BuildPermitTypedDataParams,
+  type SupportsPermitParams,
+} from "./permit.js";
 export { validateAddress } from "./address.js";
 export { getTokenDecimals, type GetTokenDecimalsParams } from "./decimals.js";
 export { withRetry, type RetryOptions } from "./retry.js";

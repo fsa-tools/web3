@@ -1,4 +1,5 @@
 export { ERC20_ABI } from "./erc20.js";
+export { ERC20_PERMIT_ABI } from "./erc20-permit.js";
 export { NPM_ABI } from "./npm.js";
 export { POOL_ABI, POOL_SLOT0_ABI } from "./pool.js";
 export { AERODROME_NPM_ABI, AERODROME_POOL_ABI } from "./aerodrome-npm.js";
