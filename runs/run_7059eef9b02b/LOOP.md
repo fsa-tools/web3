@@ -12,3 +12,4 @@ iter=1 passo=5 leva=#12 ts=2026-09-04T22:46:36Z nota=qa:passed no forge (MiniMax
 iter=1 passo=4 leva=#9 ts=2026-09-04T22:46:36Z nota=seams S1-S4 aprovados p/ criterio de aceite; (a) sem planSupplyAuto (b) Base no smoke em escopo (c) ADDRESSES[8453] vai ao report
 iter=1 passo=4 leva=#11 ts=2026-09-04T22:48:11Z nota=worker_done #11 (HEAD 17e3575, 201/36, report fora do commit — correcao pegou)
 iter=1 passo=5 leva=#11 ts=2026-09-04T22:48:11Z nota=gate #11 -> MiniMax (ctx_1b53b1e07031); brief marca caminho de capital
+iter=1 passo=5 leva=#11 ts=2026-09-04T22:50:22Z nota=qa:passed no forge; revisor provou send.ts intocado (git diff vazio)
