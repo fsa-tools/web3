@@ -22,3 +22,6 @@ iter=1 passo=6.2 leva=#9,#10,#11,#12 ts=2026-09-04T22:20:00Z nota=sessao filha (
 iter=1 passo=6.2 leva=#9,#10,#11,#12 ts=2026-09-04T22:21:00Z nota=suite pos-merge 232/233 -> falha cruzada: fitness test de #11 acusa aave-errors.ts de #10 por JSDoc; fix afc1e10, 233/233 verde
 iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:22:00Z nota=drain; worktrees iss-14/iss-17 criados de main mergeada; preflight claude 54%/6%, grok EXPIRADO, minimax 30%
 iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:26:00Z nota=dispatch ok: #14 sonnet/medium term_92bec60b, #17 sonnet/high term_6e0a4723 (teste novo => high pela tabela)
+iter=1 passo=4 leva=#14 ts=2026-09-04T22:35:00Z nota=worker_done #14 (b2aaba1, 235/41, report fora do commit); push conferido em origin
+iter=1 passo=5 leva=#14 ts=2026-09-04T22:36:00Z nota=gate #14 -> MiniMax-M3 via opencode no worktree iss-14 (term_687b16a8); dispatch --inject exige task propria (spec = brief do gate)
+iter=1 passo=5 leva=#14 ts=2026-09-04T22:45:00Z nota=qa:passed #14 (MiniMax, 235/41); mergeado --no-ff em main. ARMADILHA: check --ack exige <delivery_id> de um check nao-peek, senao engole a flag seguinte e a msg replaya
