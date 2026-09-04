@@ -1,12 +1,13 @@
+import { ERC20_ABI } from "./erc20.js";
+
+const ERC20_NAME_ABI = ERC20_ABI.find((entry) => entry.name === "name");
+if (!ERC20_NAME_ABI) {
+  throw new Error("ERC20_ABI não expõe name()");
+}
+
 /** Superfície EIP-2612 de um ERC20 — o que a detecção e o typed data leem. */
 export const ERC20_PERMIT_ABI = [
-  {
-    name: "name",
-    type: "function",
-    inputs: [],
-    outputs: [{ name: "", type: "string" }],
-    stateMutability: "view",
-  },
+  ERC20_NAME_ABI,
   {
     name: "nonces",
     type: "function",
