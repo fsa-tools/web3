@@ -24,6 +24,16 @@ const NODE_ONLY_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
   { name: "__dirname / __filename", regex: /\b__(dirname|filename)\b/ },
 ];
 
+/**
+ * Comentário não é runtime: um JSDoc que cita `require(...)` de Solidity não
+ * torna o arquivo dependente do Node. Varremos só o código.
+ */
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^[ \t]*\/\/.*$/gm, "");
+}
+
 function listTsFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
@@ -41,7 +51,7 @@ describe("browser safety", () => {
 
   it("nenhum arquivo de src/ depende do runtime Node", () => {
     const offenders = files.flatMap((file) => {
-      const source = readFileSync(file, "utf8");
+      const source = stripComments(readFileSync(file, "utf8"));
       return NODE_ONLY_PATTERNS.filter(({ regex }) => regex.test(source)).map(
         ({ name }) => `${relative(SRC_ROOT, file)}: ${name}`,
       );
