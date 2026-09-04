@@ -13,3 +13,5 @@ iter=1 passo=4 leva=#9 ts=2026-09-04T22:46:36Z nota=seams S1-S4 aprovados p/ cri
 iter=1 passo=4 leva=#11 ts=2026-09-04T22:48:11Z nota=worker_done #11 (HEAD 17e3575, 201/36, report fora do commit — correcao pegou)
 iter=1 passo=5 leva=#11 ts=2026-09-04T22:48:11Z nota=gate #11 -> MiniMax (ctx_1b53b1e07031); brief marca caminho de capital
 iter=1 passo=5 leva=#11 ts=2026-09-04T22:50:22Z nota=qa:passed no forge; revisor provou send.ts intocado (git diff vazio)
+iter=1 passo=4 leva=#10 ts=2026-09-04T22:52:49Z nota=worker_done #10 (abbf940, 207/37, report fora do commit); package.json so exports ./simulate — em escopo
+iter=1 passo=5 leva=#10 ts=2026-09-04T22:52:49Z nota=gate #10 -> MiniMax (ctx_8737047434af); decisao central = gap health-factor e escopo ou blocker
