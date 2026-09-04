@@ -2,6 +2,7 @@ import { encodeFunctionData, type Address } from "viem";
 import { AAVE_POOL_ABI } from "../../abis/aave-pool.js";
 import { ERC20_ABI } from "../../abis/erc20.js";
 import type { TxRequest } from "../../tx/types.js";
+import type { PermitSignature } from "../../utils/permit.js";
 import type {
   SupplyOperationParams,
   WithdrawOperationParams,
@@ -93,6 +94,74 @@ export function planRepay(params: PlanRepayParams): TxRequest[] {
           params.amount,
           BigInt(params.interestRateMode),
           params.onBehalfOf,
+        ],
+      }),
+      value: 0n,
+    },
+  ];
+}
+
+export type PlanSupplyWithPermitParams = PlanSupplyParams & {
+  readonly permit: PermitSignature;
+};
+
+/**
+ * Supply em UMA tx: o permit EIP-2612 substitui o approve prévio.
+ * Sem suporte a permit no token (ver `supportsPermit`), use `planSupply`.
+ */
+export function planSupplyWithPermit(
+  params: PlanSupplyWithPermitParams,
+): TxRequest[] {
+  return [
+    {
+      label: "supply to Aave V3 (permit)",
+      to: params.poolAddress,
+      data: encodeFunctionData({
+        abi: AAVE_POOL_ABI,
+        functionName: "supplyWithPermit",
+        args: [
+          params.asset,
+          params.amount,
+          params.onBehalfOf,
+          AAVE_REFERRAL_CODE,
+          params.permit.deadline,
+          params.permit.v,
+          params.permit.r,
+          params.permit.s,
+        ],
+      }),
+      value: 0n,
+    },
+  ];
+}
+
+export type PlanRepayWithPermitParams = PlanRepayParams & {
+  readonly permit: PermitSignature;
+};
+
+/**
+ * Repay em UMA tx: o permit EIP-2612 substitui o approve prévio.
+ * Sem suporte a permit no token (ver `supportsPermit`), use `planRepay`.
+ */
+export function planRepayWithPermit(
+  params: PlanRepayWithPermitParams,
+): TxRequest[] {
+  return [
+    {
+      label: "repay to Aave V3 (permit)",
+      to: params.poolAddress,
+      data: encodeFunctionData({
+        abi: AAVE_POOL_ABI,
+        functionName: "repayWithPermit",
+        args: [
+          params.asset,
+          params.amount,
+          BigInt(params.interestRateMode),
+          params.onBehalfOf,
+          params.permit.deadline,
+          params.permit.v,
+          params.permit.r,
+          params.permit.s,
         ],
       }),
       value: 0n,
