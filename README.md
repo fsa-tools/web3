@@ -97,6 +97,39 @@ Portável no sentido de "não importa Node", mas **destinado ao processo servido
 No browser, prefira `createChainContext` sem `rpc` (ou só com `timeoutMs`/`retryCount`) e um RPC
 público. Os knobs de pool existem para os bots, que rodam em processo único e de longa duração.
 
+## Simulação antes de enviar (`./simulate`)
+
+Antes de assinar, dá para medir o que a sequência faria. `simulateTxRequests` usa `eth_simulateV1`
+quando o RPC o suporta e cai para `eth_call` quando não — a detecção é automática, e o campo
+`chained` diz por qual caminho o resultado veio.
+
+```typescript
+import { simulateTxRequests } from "@fsa-tools/web3/simulate";
+
+const sim = await simulateTxRequests(ctx, [approveTx, supplyTx], {
+  from: account.address,          // obrigatório
+  abis: [AAVE_POOL_ABI],          // custom errors extras na decodificação
+});
+
+for (const r of sim.results) {
+  if (r.status === "revert") console.error(r.label, r.reason); // reason já decodificado
+}
+
+if (sim.chained) {
+  console.log(sim.assetDiffs);    // saldo pré-primeira-tx → pós-última-tx
+}
+```
+
+O `reason` vem decodificado, inclusive os erros do Aave V3 — que o protocolo emite como **string
+numérica** (`"27"` → `RESERVE_INACTIVE`), não como custom error. A tabela vive em
+`src/abis/aave-errors.ts`; `Error(string)` e `Panic(uint256)` estão sempre disponíveis.
+
+| Regra | Motivo |
+|-------|--------|
+| `chained: false` ⇒ sem encadeamento de estado | o fallback `eth_call` simula cada tx isolada; um lote em que a 2ª depende da 1ª (approve → supply) perde a precisão, e é isso que o campo denuncia |
+| `assetDiffs` só existe no caminho `chained` | o diff agregado da sequência não é reconstituível a partir de chamadas isoladas |
+| `assetDiffs` cobre saldo de token, não posição | diff de health factor **não** é reportado — issue #15 |
+
 ## Migrating from v1.x to v2.0
 
 In v1.x, each function received `publicClient`, `walletClient`, and `chainId` directly. In v2.0, create a `ChainContext` once and pass it to all functions.

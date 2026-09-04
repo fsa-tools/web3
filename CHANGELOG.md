@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.10.0 — 2026-09-04
+
+### Added
+- `planSupplyWithPermit` / `planRepayWithPermit` (`src/protocols/aave/plan.ts`): supply e repay do Aave V3 com
+  aprovação por assinatura EIP-2612, eliminando a transação de `approve` separada. Inclui detecção de suporte a
+  permit no token (`src/utils/permit.ts`) e o `ERC20_PERMIT_ABI`. A primitiva foi exercitada contra a Base
+  mainnet no smoke test, não só em unit. (#9)
+- Módulo `simulate` (`src/simulate/`): `eth_simulateV1` com fallback automático para `eth_call` em RPC que não
+  o suporta (`method-support.ts`), e revert decodificado — incluindo os códigos numéricos de erro do Aave V3
+  (`src/abis/aave-errors.ts`), que o protocolo emite como string numérica. Exportado em `./simulate`. (#10)
+- `ChainContext` aceita `walletClient` injetado (EIP-1193/6963), de modo que `sendTxRequest` deixa de exigir
+  `privateKey` — é o que permite assinar com a carteira de uma extensão de navegador. `signTypedData` exposto em
+  `src/tx/sign.ts`. Fitness test novo (`tests/unit/browser-safety.test.ts`) barra qualquer dependência do
+  runtime Node em `src/`, para que regressão de portabilidade quebre o build desta lib. (#11)
+- `name()` no `ERC20_ABI` base; `ERC20_PERMIT_ABI` passa a reaproveitar a entrada em vez de duplicá-la. (#14)
+
+### Fixed
+- `browser-safety.test.ts` ignora comentários ao varrer `src/`: um JSDoc que citava `require(cond, Errors.X)` do
+  Solidity fazia o fitness test acusar `src/abis/aave-errors.ts`. Falha só observável com os merges de #10 e #11
+  juntos — nenhum gate por-issue podia pegá-la.
+
+### Tested
+- Cobertura de `ensureAllowance` e dos wrappers de protocolo (Aave `supply`, Uniswap V3 `mintPosition`,
+  Aerodrome `swapExactInputSingle`) com `walletClient` injetado. Nenhuma mudança de produção foi necessária: a
+  cobertura confirmou o comportamento que antes era inferência. (#17)
+
+### Docs
+- `CLAUDE.md`: convenção cross-repo — issue aberta a pedido de outro repo carrega `Blocks <owner/repo>#N` no
+  corpo, e quem a fecha posta o veredito na issue solicitante. (#12)
+
 ## 3.9.1 — 2026-07-25
 
 ### Fixed
