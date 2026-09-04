@@ -1,8 +1,14 @@
 // tests/unit/context.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { http } from "viem";
+import { mainnet } from "viem/chains";
 import { createChainContext } from "../../src/context.js";
 import { ChainNotSupportedError } from "../../src/errors.js";
+import {
+  createFakeProvider,
+  createInjectedWalletClient,
+  EXTENSION_ADDRESS,
+} from "./_helpers/eip1193.js";
 
 vi.mock("viem", async (importOriginal) => {
   const actual = await importOriginal<typeof import("viem")>();
@@ -110,5 +116,62 @@ describe("createChainContext", () => {
       BASE_RPC,
       expect.anything(),
     );
+  });
+});
+
+describe("createChainContext com walletClient injetado", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("usa o walletClient externo como está, sem privateKey", () => {
+    const injected = createInjectedWalletClient(createFakeProvider());
+    const ctx = createChainContext({
+      chainId: BASE_CHAIN_ID,
+      rpcUrls: [BASE_RPC],
+      walletClient: injected,
+    });
+    expect(ctx.walletClient).toBe(injected);
+    expect(ctx.walletClient?.account.address).toBe(EXTENSION_ADDRESS);
+  });
+
+  it("publicClient continua vindo do rpc-pool mesmo com walletClient injetado", () => {
+    const ctx = createChainContext({
+      chainId: BASE_CHAIN_ID,
+      rpcUrls: [BASE_RPC],
+      walletClient: createInjectedWalletClient(createFakeProvider()),
+      rpc: { timeoutMs: 1234, retryCount: 2 },
+    });
+    expect(ctx.publicClient).toBeDefined();
+    expect(ctx.publicClient.chain?.id).toBe(BASE_CHAIN_ID);
+    expect(vi.mocked(http)).toHaveBeenCalledWith(BASE_RPC, {
+      timeout: 1234,
+      retryCount: 2,
+    });
+  });
+
+  it("rejeita privateKey e walletClient ao mesmo tempo", () => {
+    expect(() =>
+      createChainContext({
+        chainId: BASE_CHAIN_ID,
+        rpcUrls: [BASE_RPC],
+        privateKey: TEST_PK,
+        walletClient: createInjectedWalletClient(createFakeProvider()),
+      }),
+    ).toThrow(/privateKey.*walletClient|walletClient.*privateKey/);
+  });
+
+  it("rejeita walletClient cuja chain diverge do chainId do contexto", () => {
+    const onWrongChain = createInjectedWalletClient(
+      createFakeProvider(),
+      mainnet,
+    );
+    expect(() =>
+      createChainContext({
+        chainId: BASE_CHAIN_ID,
+        rpcUrls: [BASE_RPC],
+        walletClient: onWrongChain,
+      }),
+    ).toThrow(/chain/i);
   });
 });
