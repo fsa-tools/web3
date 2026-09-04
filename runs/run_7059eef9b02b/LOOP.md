@@ -25,3 +25,6 @@ iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:26:00Z nota=dispatch ok: #14 sonn
 iter=1 passo=4 leva=#14 ts=2026-09-04T22:35:00Z nota=worker_done #14 (b2aaba1, 235/41, report fora do commit); push conferido em origin
 iter=1 passo=5 leva=#14 ts=2026-09-04T22:36:00Z nota=gate #14 -> MiniMax-M3 via opencode no worktree iss-14 (term_687b16a8); dispatch --inject exige task propria (spec = brief do gate)
 iter=1 passo=5 leva=#14 ts=2026-09-04T22:45:00Z nota=qa:passed #14 (MiniMax, 235/41); mergeado --no-ff em main. ARMADILHA: check --ack exige <delivery_id> de um check nao-peek, senao engole a flag seguinte e a msg replaya
+iter=1 passo=5 leva=#17 ts=2026-09-04T22:55:00Z nota=qa:passed #17 (MiniMax); revisor fez rodada de mutacao — bypass de ctx.walletClient derruba os testes novos, cobertura nao e teatro
+iter=1 passo=6.2 leva=#14,#17 ts=2026-09-04T22:56:00Z nota=drain completo; suite final pos-merge das 6 = 242/242, typecheck+build limpos; ledger drained
+iter=1 passo=8 leva=- ts=2026-09-04T22:56:00Z nota=fim: fila v3.10 so com HITL (#13 #15 #16, debt:decision); ledger drained; nenhuma linha do laco pendente

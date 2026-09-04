@@ -1,3 +1,8 @@
+drained: 2026-09-04 — classe A (#14, #17) implementada, aprovada no gate e mergeada em main.
+Colheita da leva de dreno: N=0 FD=2 — os dois reports registraram débito (ABIs de src/abis/ sem
+teste dedicado; itens do report-17), mas débito-de-débito não vira issue por doutrina.
+Classe B segue nas issues #13 #15 #16 (todas `debt:decision`, cabeça do operador).
+
 # DEBITOS.md — colheita run_7059eef9b02b (v3.10)
 
 Ledger de débitos colhidos dos reports #9–#12. Máx. 3 linhas por débito. `D` = mandados ao
