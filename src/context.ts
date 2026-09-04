@@ -43,8 +43,17 @@ export type ChainContext = {
 
 export type CreateChainContextParams = {
   chainId: number;
+  /** Sempre necessário: alimenta o `publicClient` via rpc-pool, nunca a assinatura. */
   rpcUrls: string[];
+  /** Assinatura local (server-side). Mutuamente exclusivo com `walletClient`. */
   privateKey?: Hex;
+  /**
+   * WalletClient já construído fora da lib — tipicamente
+   * `createWalletClient({ chain, transport: custom(provider), account })` sobre um
+   * provider EIP-1193 descoberto por EIP-6963. Usado como está: transporte e conta
+   * são dele, e a lib nunca vê chave. Mutuamente exclusivo com `privateKey`.
+   */
+  walletClient?: WalletClient<Transport, Chain, Account>;
   decimalsCache?: Map<string, number>;
   rpc?: RpcOptions;
 };
@@ -64,8 +73,21 @@ const CHAIN_MAP: Record<number, Chain> = {
 export function createChainContext(
   params: CreateChainContextParams,
 ): ChainContext {
+  if (params.privateKey && params.walletClient) {
+    throw new Error(
+      "createChainContext accepts privateKey or walletClient, not both",
+    );
+  }
+
   const chain = CHAIN_MAP[params.chainId];
   if (!chain) throw new ChainNotSupportedError(params.chainId);
+
+  const injectedChainId = params.walletClient?.chain?.id;
+  if (injectedChainId !== undefined && injectedChainId !== params.chainId) {
+    throw new Error(
+      `walletClient is on chain ${injectedChainId}, but context chainId is ${params.chainId}`,
+    );
+  }
 
   const addresses = ADDRESSES[params.chainId];
   if (!addresses) throw new ChainNotSupportedError(params.chainId);
@@ -86,13 +108,15 @@ export function createChainContext(
 
   const publicClient = createPublicClient({ chain, transport }) as PublicClient;
 
-  const walletClient = params.privateKey
-    ? createWalletClient({
-        chain,
-        transport,
-        account: privateKeyToAccount(params.privateKey),
-      })
-    : undefined;
+  const walletClient =
+    params.walletClient ??
+    (params.privateKey
+      ? createWalletClient({
+          chain,
+          transport,
+          account: privateKeyToAccount(params.privateKey),
+        })
+      : undefined);
 
   return {
     publicClient,
