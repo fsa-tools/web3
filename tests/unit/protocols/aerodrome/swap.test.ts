@@ -6,6 +6,11 @@ import {
   ProtocolNotSupportedError,
   SlippageExceededError,
 } from "../../../../src/errors.js";
+import {
+  createFakeProvider,
+  createInjectedWalletClient,
+  EXTENSION_ADDRESS,
+} from "../../_helpers/eip1193.js";
 
 const SWAP_ROUTER: Address = "0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5";
 const QUOTER: Address = "0x254cF9E1E6e233aa1AC962CB9B05b2cfeAaE15b0";
@@ -196,5 +201,66 @@ describe("swapExactInputSingle (aerodrome)", () => {
         slippageBps: 100,
       }),
     ).rejects.toThrow();
+  });
+});
+
+describe("swapExactInputSingle (aerodrome) com walletClient injetado (EIP-1193, sem privateKey)", () => {
+  function injectedCtx() {
+    const provider = createFakeProvider();
+    let balanceOfCallCount = 0;
+    const publicClient = {
+      chain: { id: 8453 },
+      readContract: vi.fn(async (p: { functionName: string }) => {
+        if (p.functionName === "allowance") return 0n;
+        if (p.functionName === "quoteExactInputSingle") {
+          return [QUOTED_OUT, Q96, 1, 90_000n];
+        }
+        if (p.functionName === "balanceOf") {
+          balanceOfCallCount += 1;
+          return balanceOfCallCount === 1 ? 0n : 500n;
+        }
+        return 0n;
+      }),
+      waitForTransactionReceipt: vi.fn(async () => ({
+        gasUsed: 120_000n,
+        logs: [],
+      })),
+    } as unknown as ChainContext["publicClient"];
+    const ctx = {
+      publicClient,
+      walletClient: createInjectedWalletClient(provider),
+      addresses: {
+        weth: TOKEN_IN,
+        aerodrome: {
+          npm: "0x0" as Address,
+          swapRouter: SWAP_ROUTER,
+          quoter: QUOTER,
+        },
+      },
+    } as unknown as ChainContext;
+    return { ctx, provider };
+  }
+
+  it("aprova e envia o swap via o provider da extensão, sem privateKey no context", async () => {
+    const { ctx, provider } = injectedCtx();
+
+    const result = await swapExactInputSingle(ctx, {
+      tokenIn: TOKEN_IN,
+      tokenOut: TOKEN_OUT,
+      tickSpacing: 100,
+      amountIn: 1_000n,
+      slippageBps: 100,
+    });
+
+    expect(result.amountOut).toBe(500n);
+    const sendCalls = provider.requests.filter(
+      (r) => r.method === "eth_sendTransaction",
+    );
+    // 1 approve (ensureAllowance via writeContract) + 1 exactInputSingle (writeContract)
+    expect(sendCalls).toHaveLength(2);
+    for (const call of sendCalls) {
+      const [sent] = call.params as [{ from: string }];
+      expect(sent.from.toLowerCase()).toBe(EXTENSION_ADDRESS.toLowerCase());
+    }
   });
 });

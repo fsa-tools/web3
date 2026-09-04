@@ -2,6 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import type { Address } from "viem";
 import { ensureAllowance } from "../../../src/utils/erc20.js";
 import type { ChainContext } from "../../../src/context.js";
+import {
+  createFakeProvider,
+  createInjectedWalletClient,
+  EXTENSION_ADDRESS,
+} from "../_helpers/eip1193.js";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
 
@@ -174,5 +179,76 @@ describe("ensureAllowance", () => {
     expect(result.receipts).toHaveLength(2);
     expect(result.receipts[0]!.transactionHash).toBe("0x1");
     expect(result.receipts[1]!.transactionHash).toBe("0x2");
+  });
+});
+
+describe("ensureAllowance com walletClient injetado (EIP-1193, sem privateKey)", () => {
+  function injectedCtx(currentAllowance: bigint) {
+    const provider = createFakeProvider();
+    const publicClient = {
+      readContract: vi.fn(async () => currentAllowance),
+      waitForTransactionReceipt: vi.fn(async (p: { hash: `0x${string}` }) => ({
+        transactionHash: p.hash,
+        gasUsed: 50_000n,
+        effectiveGasPrice: 1_000n,
+      })),
+    } as unknown as ChainContext["publicClient"];
+    const ctx = {
+      publicClient,
+      walletClient: createInjectedWalletClient(provider),
+    } as unknown as ChainContext;
+    return { ctx, provider };
+  }
+
+  it("não deriva de privateKey — o account é o endereço injetado pelo provider", async () => {
+    const { ctx } = injectedCtx(0n);
+    expect(ctx.walletClient?.account.address.toLowerCase()).toBe(
+      EXTENSION_ADDRESS.toLowerCase(),
+    );
+  });
+
+  it("aprova via eth_sendTransaction do provider quando allowance é zero", async () => {
+    const { ctx, provider } = injectedCtx(0n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+    });
+    expect(result.approved).toBe(true);
+    const sendCalls = provider.requests.filter(
+      (r) => r.method === "eth_sendTransaction",
+    );
+    expect(sendCalls).toHaveLength(1);
+    const [sent] = sendCalls[0]!.params as [Record<string, string>];
+    expect(sent.from.toLowerCase()).toBe(EXTENSION_ADDRESS.toLowerCase());
+    expect(sent.to?.toLowerCase()).toBe(TOKEN.toLowerCase());
+  });
+
+  it("reseta e reaprova via o provider quando approvalMode é exact e allowance é positiva", async () => {
+    const { ctx, provider } = injectedCtx(5n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+      approvalMode: "exact",
+    });
+    expect(result.receipts).toHaveLength(2);
+    const sendCalls = provider.requests.filter(
+      (r) => r.method === "eth_sendTransaction",
+    );
+    expect(sendCalls).toHaveLength(2);
+  });
+
+  it("não escreve nem retorna hash quando allowance já cobre o amount", async () => {
+    const { ctx, provider } = injectedCtx(2_000n);
+    const result = await ensureAllowance(ctx, {
+      token: TOKEN,
+      spender: SPENDER,
+      amount: 1_000n,
+    });
+    expect(result.approved).toBe(false);
+    expect(
+      provider.requests.some((r) => r.method === "eth_sendTransaction"),
+    ).toBe(false);
   });
 });

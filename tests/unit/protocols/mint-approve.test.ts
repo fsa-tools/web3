@@ -3,6 +3,11 @@ import type { Address } from "viem";
 import { mintPosition as mintUniswapV3 } from "../../../src/protocols/uniswap-v3/mint.js";
 import { mintPosition as mintAerodrome } from "../../../src/protocols/aerodrome/mint.js";
 import type { ChainContext } from "../../../src/context.js";
+import {
+  createFakeProvider,
+  createInjectedWalletClient,
+  EXTENSION_ADDRESS,
+} from "../_helpers/eip1193.js";
 
 const NPM_UNISWAP: Address = "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1";
 const NPM_AERODROME: Address = "0x827922686190790b37229fd06084350E74485b72";
@@ -116,5 +121,66 @@ describe("mintPosition (aerodrome) — pre-mint approvals", () => {
     expect(approves).toHaveLength(2);
     const mintIdx = calls.findIndex((c) => c.functionName === "mint");
     expect(mintIdx).toBeGreaterThan(-1);
+  });
+});
+
+describe("mintPosition (uniswap-v3) com walletClient injetado (EIP-1193, sem privateKey)", () => {
+  function injectedCtx() {
+    const provider = createFakeProvider();
+    const receipt = {
+      gasUsed: 100_000n,
+      logs: [
+        {
+          address: NPM_UNISWAP,
+          topics: [
+            "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+          ],
+          data: "0x" + "00".repeat(128),
+          eventName: "IncreaseLiquidity",
+          args: { tokenId: 1n, liquidity: 1_000n, amount0: 1n, amount1: 2n },
+        },
+      ],
+    };
+    const publicClient = {
+      chain: { id: 8453 },
+      readContract: vi.fn(async () => 0n),
+      waitForTransactionReceipt: vi.fn(async () => receipt),
+    } as unknown as ChainContext["publicClient"];
+    const ctx = {
+      publicClient,
+      walletClient: createInjectedWalletClient(provider),
+      addresses: {
+        uniswapV3: { npm: NPM_UNISWAP, factory: "0x0" as Address },
+        weth: TOKEN0,
+      },
+    } as unknown as ChainContext;
+    return { ctx, provider };
+  }
+
+  it("aprova token0/token1 e envia o mint via o provider da extensão, sem privateKey no context", async () => {
+    const { ctx, provider } = injectedCtx();
+
+    const result = await mintUniswapV3(ctx, {
+      token0: TOKEN0,
+      token1: TOKEN1,
+      fee: 100,
+      tickLower: -200_000,
+      tickUpper: -190_000,
+      amount0Desired: 1_000_000_000_000_000n,
+      amount1Desired: 1_000_000n,
+      slippageBps: 100,
+    });
+
+    expect(result.tokenId).toBe(1n);
+    const sendCalls = provider.requests.filter(
+      (r) => r.method === "eth_sendTransaction",
+    );
+    // 2 approves (ensureAllowance via writeContract) + 1 mint (via sendTxRequest)
+    expect(sendCalls).toHaveLength(3);
+    for (const call of sendCalls) {
+      const [sent] = call.params as [{ from: string }];
+      expect(sent.from.toLowerCase()).toBe(EXTENSION_ADDRESS.toLowerCase());
+    }
   });
 });
