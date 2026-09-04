@@ -15,3 +15,4 @@ iter=1 passo=5 leva=#11 ts=2026-09-04T22:48:11Z nota=gate #11 -> MiniMax (ctx_1b
 iter=1 passo=5 leva=#11 ts=2026-09-04T22:50:22Z nota=qa:passed no forge; revisor provou send.ts intocado (git diff vazio)
 iter=1 passo=4 leva=#10 ts=2026-09-04T22:52:49Z nota=worker_done #10 (abbf940, 207/37, report fora do commit); package.json so exports ./simulate — em escopo
 iter=1 passo=5 leva=#10 ts=2026-09-04T22:52:49Z nota=gate #10 -> MiniMax (ctx_8737047434af); decisao central = gap health-factor e escopo ou blocker
+iter=1 passo=5 leva=#10 ts=2026-09-04T22:55:01Z nota=qa:passed; gap health-factor julgado follow-up nao-bloqueante -> candidato a debito
