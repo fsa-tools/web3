@@ -57,6 +57,25 @@ describe("sendTxRequest", () => {
       sendTxRequest({ publicClient: {} } as unknown as ChainContext, tx),
     ).rejects.toThrow("walletClient");
   });
+
+  it("usa 2 confirmações quando ctx.confirmations é undefined", async () => {
+    const { ctx } = mockCtx();
+    const tx: TxRequest = { label: "x", to: TARGET, data: "0x", value: 0n };
+    await sendTxRequest(ctx, tx);
+    expect(ctx.publicClient.waitForTransactionReceipt).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmations: 2 }),
+    );
+  });
+
+  it("usa ctx.confirmations quando definida", async () => {
+    const { ctx } = mockCtx();
+    ctx.confirmations = 1;
+    const tx: TxRequest = { label: "x", to: TARGET, data: "0x", value: 0n };
+    await sendTxRequest(ctx, tx);
+    expect(ctx.publicClient.waitForTransactionReceipt).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmations: 1 }),
+    );
+  });
 });
 
 describe("sendTxRequest com walletClient injetado (EIP-1193, sem privateKey)", () => {

@@ -117,6 +117,36 @@ describe("createChainContext", () => {
       expect.anything(),
     );
   });
+
+  it("confirmations ausente ⇒ undefined no ctx", () => {
+    const ctx = createChainContext({
+      chainId: BASE_CHAIN_ID,
+      rpcUrls: [BASE_RPC],
+    });
+    expect(ctx.confirmations).toBeUndefined();
+  });
+
+  it("propaga confirmations fornecida", () => {
+    const ctx = createChainContext({
+      chainId: BASE_CHAIN_ID,
+      rpcUrls: [BASE_RPC],
+      confirmations: 1,
+    });
+    expect(ctx.confirmations).toBe(1);
+  });
+
+  it.each([0, -1, 1.5])(
+    "lança para confirmations inválida (%s)",
+    (confirmations) => {
+      expect(() =>
+        createChainContext({
+          chainId: BASE_CHAIN_ID,
+          rpcUrls: [BASE_RPC],
+          confirmations,
+        }),
+      ).toThrow(/confirmations/i);
+    },
+  );
 });
 
 describe("createChainContext com walletClient injetado", () => {

@@ -39,6 +39,8 @@ export type ChainContext = {
   walletClient?: WalletClient<Transport, Chain, Account>;
   addresses: ChainAddresses;
   decimalsCache?: Map<string, number>;
+  /** Confirmações de bloco antes de tratar a tx como final. Ausente ⇒ `sendTxRequest` usa o default do server mode (2). */
+  confirmations?: number;
 };
 
 export type CreateChainContextParams = {
@@ -56,6 +58,13 @@ export type CreateChainContextParams = {
   walletClient?: WalletClient<Transport, Chain, Account>;
   decimalsCache?: Map<string, number>;
   rpc?: RpcOptions;
+  /**
+   * Confirmações de bloco antes de tratar a tx como final. Propriedade do modo
+   * (server vs. browser), não da chamada individual. Default do server mode (2)
+   * quando ausente; navegador (Atlas) opta explicitamente com `confirmations: 1`.
+   * Inteiro ≥ 1.
+   */
+  confirmations?: number;
 };
 
 const CHAIN_MAP: Record<number, Chain> = {
@@ -76,6 +85,15 @@ export function createChainContext(
   if (params.privateKey && params.walletClient) {
     throw new Error(
       "createChainContext accepts privateKey or walletClient, not both",
+    );
+  }
+
+  if (
+    params.confirmations !== undefined &&
+    (!Number.isInteger(params.confirmations) || params.confirmations < 1)
+  ) {
+    throw new Error(
+      `confirmations must be an integer >= 1, got ${params.confirmations}`,
     );
   }
 
@@ -123,5 +141,6 @@ export function createChainContext(
     walletClient,
     addresses,
     decimalsCache: params.decimalsCache,
+    confirmations: params.confirmations,
   };
 }
