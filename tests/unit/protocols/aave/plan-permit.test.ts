@@ -7,9 +7,10 @@ import {
   planRepayWithPermit,
 } from "../../../../src/protocols/aave/plan.js";
 import { AAVE_POOL_ABI } from "../../../../src/abis/aave-pool.js";
+import { ADDRESSES } from "../../../../src/constants/addresses.js";
 
 const ASSET: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const POOL: Address = "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5";
+const POOL: Address = ADDRESSES[8453]!.aave!.pool;
 const WALLET: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
 
 const DEADLINE = 1_800_000_000n;
