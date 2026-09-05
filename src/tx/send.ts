@@ -3,7 +3,7 @@ import type { ChainContext } from "../context.js";
 import type { GasOptions } from "../utils/gas.js";
 import type { TxRequest } from "./types.js";
 
-const RECEIPT_CONFIRMATIONS = 2;
+const DEFAULT_CONFIRMATIONS = 2;
 
 export type SendTxResult = {
   txHash: Hash;
@@ -26,7 +26,7 @@ export async function sendTxRequest(
   });
   const receipt = await ctx.publicClient.waitForTransactionReceipt({
     hash: txHash,
-    confirmations: RECEIPT_CONFIRMATIONS,
+    confirmations: ctx.confirmations ?? DEFAULT_CONFIRMATIONS,
   });
   return { txHash, receipt };
 }

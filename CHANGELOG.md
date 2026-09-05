@@ -3,6 +3,11 @@
 ## Unreleased
 
 ### Added
+- `ChainContext.confirmations?: number` (`src/context.ts`): confirmações de bloco viram um knob de modo, não
+  mais uma constante fixa em `sendTxRequest`. `createChainContext` valida inteiro ≥ 1 e lança se não for.
+  Ausente ⇒ `undefined` no ctx e `sendTxRequest` usa o default de 2 (server mode) — nenhum caller atual muda
+  de comportamento. Navegador (Atlas) opta com `createChainContext({ ..., confirmations: 1 })` para reduzir a
+  latência visível por transação. (#16)
 - `ADDRESSES[8453].aave.pool` (`src/constants/addresses.ts`): o Pool da Aave V3 na Base entra no registry como
   as outras chains, então `aave.supply()` / `withdraw()` / `getUserAccountData()` funcionam na Base via
   `ctx.addresses.aave` em vez de lançar `ProtocolNotSupportedError`. Os testes que hardcodavam o endereço
