@@ -1,6 +1,7 @@
 export { supply } from "./supply.js";
 export { withdraw } from "./withdraw.js";
 export { getPositionValue, getUserAccountData } from "./position.js";
+export { aaveAccountDataProbe } from "./probe.js";
 export type {
   SupplyOperationParams,
   SupplyResult,
