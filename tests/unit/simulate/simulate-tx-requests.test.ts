@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { BaseError, MethodNotFoundRpcError, RawContractError, encodeErrorResult } from "viem";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import { simulateTxRequests } from "../../../src/simulate/simulate-tx-requests.js";
 import type { TxRequest } from "../../../src/tx/types.js";
 import type { ChainContext } from "../../../src/context.js";
+import type { SimulationProbe } from "../../../src/simulate/types.js";
 
 const FROM: Address = "0x0000000000000000000000000000000000000001";
 const TO_A: Address = "0x0000000000000000000000000000000000000002";
@@ -150,5 +151,133 @@ describe("simulateTxRequests", () => {
     await expect(
       simulateTxRequests(ctx, txsFixture(), { from: FROM }),
     ).rejects.toThrow("all providers exhausted");
+  });
+});
+
+const PROBE_TO: Address = "0x0000000000000000000000000000000000000004";
+
+function healthFactorProbe(): SimulationProbe<bigint> {
+  return {
+    label: "aave-account-data",
+    to: PROBE_TO,
+    data: "0xgetuseraccountdata",
+    decode: (data: Hex) => BigInt(data),
+  };
+}
+
+describe("simulateTxRequests — probes", () => {
+  it("prefixa e sufixa os probes no mesmo batch e devolve pre/post em probeDiffs", async () => {
+    const probe = healthFactorProbe();
+    const simulateCalls = vi.fn(async () => ({
+      assetChanges: [],
+      block: {},
+      results: [
+        { status: "success", data: "0x1", gasUsed: 0n, logs: [] }, // probe pre
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] }, // approve
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] }, // supply
+        { status: "success", data: "0x2", gasUsed: 0n, logs: [] }, // probe post
+      ],
+    }));
+    const ctx = mockCtx({ simulateCalls });
+
+    const result = await simulateTxRequests(ctx, txsFixture(), {
+      from: FROM,
+      probes: [probe],
+    });
+
+    expect(simulateCalls).toHaveBeenCalledWith(
+      expect.objectContaining({
+        calls: [
+          { to: PROBE_TO, data: "0xgetuseraccountdata", value: 0n },
+          { to: TO_A, data: "0xapprove", value: 0n },
+          { to: TO_B, data: "0xsupply", value: 0n },
+          { to: PROBE_TO, data: "0xgetuseraccountdata", value: 0n },
+        ],
+      }),
+    );
+    expect(result.results).toHaveLength(2);
+    expect(result.probeDiffs).toEqual([{ label: "aave-account-data", pre: 1n, post: 2n }]);
+  });
+
+  it("sem probes, o batch é idêntico ao atual (nenhuma call extra)", async () => {
+    const simulateCalls = vi.fn(async () => ({
+      assetChanges: [],
+      block: {},
+      results: [
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+      ],
+    }));
+    const ctx = mockCtx({ simulateCalls });
+
+    const result = await simulateTxRequests(ctx, txsFixture(), { from: FROM });
+
+    expect(simulateCalls).toHaveBeenCalledWith(
+      expect.objectContaining({
+        calls: [
+          { to: TO_A, data: "0xapprove", value: 0n },
+          { to: TO_B, data: "0xsupply", value: 0n },
+        ],
+      }),
+    );
+    expect(result.probeDiffs).toBeUndefined();
+  });
+
+  it("probe que reverte no pré lança erro nomeando o label do probe", async () => {
+    const probe = healthFactorProbe();
+    const simulateCalls = vi.fn(async () => ({
+      assetChanges: [],
+      block: {},
+      results: [
+        { status: "failure", data: "0x", gasUsed: 0n, logs: [] }, // probe pre revert
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+        { status: "success", data: "0x2", gasUsed: 0n, logs: [] },
+      ],
+    }));
+    const ctx = mockCtx({ simulateCalls });
+
+    await expect(
+      simulateTxRequests(ctx, txsFixture(), { from: FROM, probes: [probe] }),
+    ).rejects.toThrow(/aave-account-data/);
+  });
+
+  it("probe que reverte no pós lança erro nomeando o label do probe", async () => {
+    const probe = healthFactorProbe();
+    const simulateCalls = vi.fn(async () => ({
+      assetChanges: [],
+      block: {},
+      results: [
+        { status: "success", data: "0x1", gasUsed: 0n, logs: [] },
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+        { status: "success", data: "0x", gasUsed: 50_000n, logs: [] },
+        { status: "failure", data: "0x", gasUsed: 0n, logs: [] }, // probe post revert
+      ],
+    }));
+    const ctx = mockCtx({ simulateCalls });
+
+    await expect(
+      simulateTxRequests(ctx, txsFixture(), { from: FROM, probes: [probe] }),
+    ).rejects.toThrow(/aave-account-data/);
+  });
+
+  it("no fallback isolado (chained: false), probeDiffs fica undefined", async () => {
+    const probe = healthFactorProbe();
+    const simulateCalls = vi.fn(async () => {
+      throw new MethodNotFoundRpcError(new Error("x"), {
+        method: "eth_simulateV1",
+      });
+    });
+    const call = vi.fn(async () => "0x" as const);
+    const estimateGas = vi.fn(async () => 42_000n);
+    const ctx = mockCtx({ simulateCalls, call, estimateGas });
+
+    const result = await simulateTxRequests(ctx, txsFixture(), {
+      from: FROM,
+      probes: [probe],
+    });
+
+    expect(result.chained).toBe(false);
+    expect(result.probeDiffs).toBeUndefined();
   });
 });

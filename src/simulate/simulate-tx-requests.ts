@@ -6,8 +6,10 @@ import { decodeRevertReason } from "./decode-revert.js";
 import { isMethodNotSupportedError } from "./method-support.js";
 import type {
   AssetDiff,
+  ProbeDiff,
   SimulateTxRequestsOptions,
   SimulateTxRequestsResult,
+  SimulationProbe,
   TxSimulationResult,
 } from "./types.js";
 
@@ -29,8 +31,9 @@ export async function simulateTxRequests(
   if (txs.length === 0) return { chained: true, results: [], assetDiffs: [] };
 
   const abis = options.abis ?? [];
+  const probes = options.probes ?? [];
   try {
-    return await simulateChained(ctx, txs, options.from, abis);
+    return await simulateChained(ctx, txs, options.from, abis, probes);
   } catch (err) {
     if (!isMethodNotSupportedError(err)) throw err;
     return simulateIsolated(ctx, txs, options.from, abis);
@@ -42,18 +45,26 @@ async function simulateChained(
   txs: readonly TxRequest[],
   from: Address,
   abis: readonly Abi[],
+  probes: readonly SimulationProbe[],
 ): Promise<SimulateTxRequestsResult> {
+  const probeCalls = probes.map((probe) => ({
+    to: probe.to,
+    data: probe.data,
+    value: 0n,
+  }));
+  const txCalls = txs.map((tx) => ({ to: tx.to, data: tx.data, value: tx.value }));
+
   const sim = await ctx.publicClient.simulateCalls({
     account: from,
-    calls: txs.map((tx) => ({ to: tx.to, data: tx.data, value: tx.value })),
+    calls: [...probeCalls, ...txCalls, ...probeCalls],
     traceAssetChanges: true,
   });
 
   const results: TxSimulationResult[] = txs.map((tx, i) => {
-    const call = sim.results[i];
+    const call = sim.results[probes.length + i];
     if (!call) {
       throw new Error(
-        `simulateCalls devolveu ${sim.results.length} resultados para ${txs.length} txs`,
+        `simulateCalls devolveu ${sim.results.length} resultados para ${txs.length} txs + ${probes.length} probes`,
       );
     }
     const status: "ok" | "revert" = call.status === "success" ? "ok" : "revert";
@@ -76,7 +87,34 @@ async function simulateChained(
     diff: change.value.diff,
   }));
 
-  return { chained: true, results, assetDiffs };
+  const probeDiffs =
+    probes.length > 0
+      ? decodeProbeDiffs(probes, sim.results, txs.length)
+      : undefined;
+
+  return { chained: true, results, assetDiffs, probeDiffs };
+}
+
+function decodeProbeDiffs(
+  probes: readonly SimulationProbe[],
+  callResults: readonly { status: "success" | "failure"; data: Hex }[],
+  txCount: number,
+): ProbeDiff[] {
+  return probes.map((probe, i) => {
+    const preCall = callResults[i];
+    const postCall = callResults[probes.length + txCount + i];
+    if (!preCall || preCall.status !== "success") {
+      throw new Error(`probe "${probe.label}" reverteu na leitura pré-tx`);
+    }
+    if (!postCall || postCall.status !== "success") {
+      throw new Error(`probe "${probe.label}" reverteu na leitura pós-tx`);
+    }
+    return {
+      label: probe.label,
+      pre: probe.decode(preCall.data),
+      post: probe.decode(postCall.data),
+    };
+  });
 }
 
 async function simulateIsolated(

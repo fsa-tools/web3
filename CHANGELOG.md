@@ -3,6 +3,14 @@
 ## Unreleased
 
 ### Added
+- `SimulateTxRequestsOptions.probes` / `SimulateTxRequestsResult.probeDiffs` (`src/simulate/`): mecanismo
+  protocolo-agnóstico de leitura `view` (`SimulationProbe`) que o simulador prefixa e sufixa no mesmo batch de
+  `eth_simulateV1` — pré e pós vêm do mesmo bloco, com o estado encadeado, sem RPC extra. Sem `probes`, o batch
+  é idêntico ao atual; probe que reverte (pré ou pós) lança erro nomeando o label, nunca deixa `pre`/`post`
+  ausente em silêncio. Só surte efeito no caminho chained — no fallback isolado `probeDiffs` fica `undefined`,
+  igual a `assetDiffs`. Primeiro helper: `aaveAccountDataProbe(ctx, user)` em `@fsa-tools/web3/aave`, que decodifica
+  `getUserAccountData` para o shape de `AccountData` (inclui `healthFactor`) e lança `ProtocolNotSupportedError`
+  sem aave no ctx. (#15)
 - `ADDRESSES[8453].aave.pool` (`src/constants/addresses.ts`): o Pool da Aave V3 na Base entra no registry como
   as outras chains, então `aave.supply()` / `withdraw()` / `getUserAccountData()` funcionam na Base via
   `ctx.addresses.aave` em vez de lançar `ProtocolNotSupportedError`. Os testes que hardcodavam o endereço
