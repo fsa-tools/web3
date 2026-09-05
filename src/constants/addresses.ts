@@ -36,6 +36,9 @@ export const ADDRESSES: Record<number, ChainAddresses> = {
       swapRouter: "0x2626664c2603336E57B271c5C0b26F421741e481",
       quoter: "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a",
     },
+    aave: {
+      pool: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
+    },
   },
   1: {
     weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",

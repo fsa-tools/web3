@@ -3,9 +3,10 @@ import { decodeFunctionData } from "viem";
 import { planRepay } from "../../../../src/protocols/aave/plan.js";
 import { AAVE_POOL_ABI } from "../../../../src/abis/aave-pool.js";
 import { ERC20_ABI } from "../../../../src/abis/erc20.js";
+import { ADDRESSES } from "../../../../src/constants/addresses.js";
 
 const ASSET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
-const POOL = "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5" as const;
+const POOL = ADDRESSES[8453]!.aave!.pool;
 const WALLET = "0x1111111111111111111111111111111111111111" as const;
 
 describe("planRepay", () => {

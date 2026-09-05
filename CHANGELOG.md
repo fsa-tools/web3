@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `ADDRESSES[8453].aave.pool` (`src/constants/addresses.ts`): o Pool da Aave V3 na Base entra no registry como
+  as outras chains, então `aave.supply()` / `withdraw()` / `getUserAccountData()` funcionam na Base via
+  `ctx.addresses.aave` em vez de lançar `ProtocolNotSupportedError`. Os testes que hardcodavam o endereço
+  passam a lê-lo do registry. (#13)
+
 ## 3.10.0 — 2026-09-04
 
 ### Added

@@ -9,8 +9,9 @@ import {
   createInjectedWalletClient,
   EXTENSION_ADDRESS,
 } from "../_helpers/eip1193.js";
+import { ADDRESSES } from "../../../src/constants/addresses.js";
 
-const POOL: Address = "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5";
+const POOL: Address = ADDRESSES[8453]!.aave!.pool;
 const ASSET: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const OWNER: Address = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0";
 

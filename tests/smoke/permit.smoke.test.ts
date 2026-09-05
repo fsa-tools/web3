@@ -4,8 +4,9 @@ import {
   PERMIT_READONLY_CHAINS,
   loadReadOnlyChainContext,
 } from "./_helpers.js";
+import { ADDRESSES } from "../../src/constants/addresses.js";
 
-const AAVE_POOL_BASE = "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5" as const;
+const AAVE_POOL_BASE = ADDRESSES[8453]!.aave!.pool;
 const OWNER = "0x8F6D8D76C46BeC598f2084c530dCbE74453A36B0" as const;
 const DEADLINE = 1_800_000_000n;
 
