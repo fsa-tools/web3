@@ -6,6 +6,10 @@
       Fix de uma linha: `select(((.issue // .linkedIssue)|tostring)==$i)`. Arquivo fora do escopo
       deste repo ⇒ não editei. Contorno: path absoluto, `--cwd`, `-C` ou `cd <abs> &&`.
 - [ ] **`ROADMAP.md` está obsoleto** — fala de v1.8/v2.0 com o `package.json` em 3.11.0. Ou atualiza ou apaga.
+- [ ] **2 episódios do Graphiti (`global-harness`) enfileirados no `/done` de 2026-09-04 e não
+      confirmados por `get_episodes`** (extração assíncrona): *Grok com cota 0% estagna o dispatch e só o
+      rodapé do TUI denuncia* e *`orca orchestration task-create --json` não parseia com jq quando o spec
+      é multilinha — grep `task_`*. Contexto: STATE.md desta rodada (este item). Regravar se ausentes.
 - [ ] **Grok com cota semanal em 0% em 2026-09-04** — gate `/issue-qa` correu inteiro no degrau 2
       (MiniMax-M3). Reset: ver `orca account list`; até lá todo gate começa no degrau 2.
 
