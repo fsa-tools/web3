@@ -109,6 +109,7 @@ import { simulateTxRequests } from "@fsa-tools/web3/simulate";
 const sim = await simulateTxRequests(ctx, [approveTx, supplyTx], {
   from: account.address,          // obrigatório
   abis: [AAVE_POOL_ABI],          // custom errors extras na decodificação
+  probes: [aaveAccountDataProbe(ctx, account.address)], // leitura view pré/pós no mesmo batch
 });
 
 for (const r of sim.results) {
@@ -117,8 +118,17 @@ for (const r of sim.results) {
 
 if (sim.chained) {
   console.log(sim.assetDiffs);    // saldo pré-primeira-tx → pós-última-tx
+  console.log(sim.probeDiffs);    // [{ label, pre, post }] — ex.: healthFactor antes/depois
 }
 ```
+
+`probes` é protocolo-agnóstico: um `SimulationProbe` é `{ label, to, data, decode }` e o simulador o
+prefixa e sufixa no batch de `eth_simulateV1`, então `pre`/`post` vêm do mesmo bloco com o estado
+encadeado. `aaveAccountDataProbe` (`@fsa-tools/web3/aave`) é o primeiro helper. No fallback isolado
+`probeDiffs` fica `undefined`, como `assetDiffs`.
+
+No navegador, com o usuário esperando na tela, `createChainContext({ ..., confirmations: 1 })` reduz
+a espera por recibo em `sendTxRequest`; o default continua 2 (modo servidor).
 
 O `reason` vem decodificado, inclusive os erros do Aave V3 — que o protocolo emite como **string
 numérica** (`"27"` → `RESERVE_INACTIVE`), não como custom error. A tabela vive em

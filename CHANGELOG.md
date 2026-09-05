@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.11.0 — 2026-09-04
 
 ### Added
 - `ChainContext.confirmations?: number` (`src/context.ts`): confirmações de bloco viram um knob de modo, não
